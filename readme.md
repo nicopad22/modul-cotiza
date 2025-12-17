@@ -4,7 +4,7 @@ proyecto para crear una sub-página dentro de la web de modul, para que uno pued
 ## TODO
 ### INTERNO:
 - [x] iniciar servidor + cliente básico, integrar dependencias (R3F, React)
-- [ ] crear visualización básica de una casa modular 2x1 con R3F
+- [x] crear visualización básica de una casa modular 2x1 con R3F
 - [ ] crear primeros elementos de customización
 
 ### EXTERNO:
