@@ -1,8 +1,11 @@
 import { Canvas } from "@react-three/fiber";
+import { useState } from "react";
 import { Experience } from "./components/Experience";
 import Sidebar from "./components/Sidebar";
 
 function App() {
+    const [quantity, setQuantity] = useState(1);
+
     return (
         <div className="w-full h-screen flex flex-row overflow-hidden bg-neutral-900">
             {/* Canvas Container: grows to fill space */}
@@ -15,11 +18,11 @@ function App() {
                     }}
                 >
                     <color attach="background" args={["#1a1a1a"]} />
-                    <Experience />
+                    <Experience quantity={quantity} />
                 </Canvas>
             </div>
             {/* Sidebar: fixed width, no shrink */}
-            <Sidebar />
+            <Sidebar quantity={quantity} setQuantity={setQuantity} />
         </div>
     );
 }
