@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const Sidebar = ({ quantity, viewMode, setViewMode }) => {
+const Sidebar = ({ quantity, viewMode, setViewMode, environment, setEnvironment }) => {
     const [sliderValue, setSliderValue] = useState(50);
     const [termination, setTermination] = useState('Standard');
 
@@ -12,7 +12,7 @@ const Sidebar = ({ quantity, viewMode, setViewMode }) => {
             {/* Logo */}
             <div className="mb-6 text-center">
                 <div className="flex items-center justify-center mb-2.5">
-                    <img src="/Logo-png-1-112x106.png" alt="Modul Logo" className="w-20 h-20 object-contain" />
+                    <img src="/logo-modul-hd-negro.png" alt="Modul Logo" className="w-20 h-20 object-contain" />
                 </div>
                 <h1 className="m-0 text-2xl text-neutral-800">Mi Modul</h1>
             </div>
@@ -67,6 +67,58 @@ const Sidebar = ({ quantity, viewMode, setViewMode }) => {
                 </button>
             </div>
 
+            {/* Environment toggle */}
+            {viewMode === '3d' && (
+                <div className="bg-neutral-200 rounded-xl p-1 flex gap-1 mb-5">
+                    <button
+                        onClick={() => setEnvironment('norte')}
+                        style={{
+                            flex: 1,
+                            padding: '8px 0',
+                            borderRadius: '10px',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontFamily: 'inherit',
+                            fontSize: '0.82rem',
+                            fontWeight: 600,
+                            transition: 'all 0.2s ease',
+                            background: environment === 'norte'
+                                ? 'linear-gradient(135deg, #6366f1, #8b5cf6)'
+                                : 'transparent',
+                            color: environment === 'norte' ? '#fff' : '#64748b',
+                            boxShadow: environment === 'norte'
+                                ? '0 2px 8px rgba(99,102,241,0.4)'
+                                : 'none',
+                        }}
+                    >
+                        🏜 Norte
+                    </button>
+                    <button
+                        onClick={() => setEnvironment('sur')}
+                        style={{
+                            flex: 1,
+                            padding: '8px 0',
+                            borderRadius: '10px',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontFamily: 'inherit',
+                            fontSize: '0.82rem',
+                            fontWeight: 600,
+                            transition: 'all 0.2s ease',
+                            background: environment === 'sur'
+                                ? 'linear-gradient(135deg, #6366f1, #8b5cf6)'
+                                : 'transparent',
+                            color: environment === 'sur' ? '#fff' : '#64748b',
+                            boxShadow: environment === 'sur'
+                                ? '0 2px 8px rgba(99,102,241,0.4)'
+                                : 'none',
+                        }}
+                    >
+                        🌲 Sur
+                    </button>
+                </div>
+            )}
+
             {/* Module count (read-only) */}
             <div className="bg-white p-4 rounded-lg mb-5 shadow-sm">
                 <h3 className="mt-0 mb-2.5 text-base text-neutral-800 font-semibold">Módulos</h3>
@@ -114,20 +166,6 @@ const Sidebar = ({ quantity, viewMode, setViewMode }) => {
                         Cambia a <strong>Planta 2D</strong> para colocar módulos en el plano.
                     </p>
                 )}
-            </div>
-
-            {/* Dimensions */}
-            <div className="bg-white p-4 rounded-lg mb-5 shadow-sm">
-                <h3 className="mt-0 mb-2.5 text-base text-neutral-800 font-semibold">Dimensions</h3>
-                <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={sliderValue}
-                    onChange={(e) => setSliderValue(e.target.value)}
-                    className="w-full"
-                />
-                <p className="mt-1.5 text-sm text-neutral-500">Value: {sliderValue}</p>
             </div>
 
             {/* Terminaciones */}

@@ -2,7 +2,7 @@ import { OrbitControls, Environment } from "@react-three/drei";
 import { Scene } from "./Scene";
 import { useState } from "react";
 
-export const Experience = ({ quantity }) => {
+export const Experience = ({ grid, environment }) => {
     const [autoRotate, setAutoRotate] = useState(false);
     return (
         <>
@@ -13,8 +13,8 @@ export const Experience = ({ quantity }) => {
                 maxDistance={20}
                 minDistance={3}
             />
-            <Scene quantity={quantity} />
-            <Environment files="/lakes_2k.exr" background />
+            <Scene grid={grid} />
+            <Environment files={environment === 'norte' ? "/norte_de_chile.exr" : "/sur_de_chile.exr"} background />
         </>
     );
 };

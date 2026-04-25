@@ -1,18 +1,19 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3 } from 'three';
 
+// Module size in world units (1 unit = 1 module width/depth)
+const MODULE_SIZE = 1.0;
+
+const COLORS = ['#6366f1', '#8b5cf6', '#a78bfa', '#818cf8', '#c4b5fd'];
+
 const MovingBox = ({ position, startPos, color }) => {
     const meshRef = useRef();
-    // Initialize state with startPos if provided, otherwise target position
-    // This allows new boxes to spawn at a specific location (e.g. previous edge)
     const [initialPos] = useState(startPos || position);
 
     useFrame((state, delta) => {
         if (meshRef.current) {
             const target = new Vector3(...position);
-            // Smoothly interpolate current position to target
-            // Using a standard lerp formula with delta for frame-independence
             const speed = 5;
             meshRef.current.position.lerp(target, 1 - Math.exp(-speed * delta));
         }
@@ -20,15 +21,35 @@ const MovingBox = ({ position, startPos, color }) => {
 
     return (
         <mesh ref={meshRef} position={initialPos}>
-            <boxGeometry />
+            <boxGeometry args={[MODULE_SIZE, MODULE_SIZE, MODULE_SIZE]} />
             <meshStandardMaterial color={color} />
         </mesh>
     );
 };
 
-export const Scene = ({ quantity = 1 }) => {
-    // Array of colors to cycle through
-    const colors = ["orange", "gray", "lightblue", "lightgreen", "pink"];
+export const Scene = ({ grid }) => {
+    // Collect all filled cells from the grid
+    const modules = useMemo(() => {
+        if (!grid) return [];
+        const cells = [];
+        grid.forEach((rowArr, row) => {
+            rowArr.forEach((filled, col) => {
+                if (filled) cells.push({ row, col });
+            });
+        });
+        return cells;
+    }, [grid]);
+
+    // Compute the centroid of all placed modules so we can center them at the origin
+    const center = useMemo(() => {
+        if (modules.length === 0) return { x: 0, z: 0 };
+        const sumX = modules.reduce((s, m) => s + m.col, 0);
+        const sumZ = modules.reduce((s, m) => s + m.row, 0);
+        return {
+            x: sumX / modules.length,
+            z: sumZ / modules.length,
+        };
+    }, [modules]);
 
     return (
         <group>
@@ -36,21 +57,19 @@ export const Scene = ({ quantity = 1 }) => {
             <directionalLight position={[10, 16, 5]} intensity={2.5} />
             <directionalLight position={[-10, -13, -5]} intensity={1} />
 
-            {Array.from({ length: quantity }).map((_, i) => {
-                const xPos = (i - (quantity - 1) / 2) * 1.0;
+            {modules.map(({ row, col }, i) => {
+                // Offset each module so the centroid sits at the world origin (0, 0, 0)
+                const x = (col - center.x) * MODULE_SIZE;
+                const y = 0;
+                const z = (row - center.z) * MODULE_SIZE;
 
-                let spawnPos = null;
-                if (i === quantity - 1 && quantity > 1) {
-                    const prevRightmost = ((quantity - 2) / 2) * 1.0;
-                    spawnPos = [prevRightmost + 1.0, 0, 0];
-                }
+                const color = COLORS[i % COLORS.length];
 
                 return (
                     <MovingBox
-                        key={i}
-                        position={[xPos, 0, 0]}
-                        startPos={spawnPos}
-                        color={colors[i % colors.length]}
+                        key={`${row}-${col}`}
+                        position={[x, y, z]}
+                        color={color}
                     />
                 );
             })}
