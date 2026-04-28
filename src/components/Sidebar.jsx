@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 // ─── Design tokens (from design.md) ───────────────────────────────────────────
 const T = {
@@ -25,10 +25,6 @@ const T = {
     fontHead:         "'Space Grotesk', system-ui, sans-serif",
     fontBody:         "'Manrope', system-ui, sans-serif",
 };
-
-// ─── Pricing ─────────────────────────────────────────────────────────────────
-const UF_PER_MODULE = { 'Modul Lite': 550, 'Modul Plus': 750 };
-const SQM_PER_MODULE = 38;
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -125,14 +121,134 @@ const MetricCard = ({ label, value, unit }) => (
     </div>
 );
 
-// ─── Sidebar ──────────────────────────────────────────────────────────────────
-const Sidebar = ({ quantity, viewMode, setViewMode, environment, setEnvironment }) => {
-    const [termination, setTermination] = useState('Modul Lite');
+/** Segmented selector (3 options in a row) */
+const SegmentedSelector = ({ options, value, onChange }) => (
+    <div style={{
+        background: T.surfaceCont,
+        borderRadius: '10px',
+        padding: '4px',
+        display: 'flex',
+        gap: '4px',
+        border: `1px solid ${T.outlineVariant}`,
+    }}>
+        {options.map(opt => (
+            <ToggleBtn
+                key={opt.value}
+                active={value === opt.value}
+                onClick={() => onChange(opt.value)}
+            >
+                {opt.label}
+            </ToggleBtn>
+        ))}
+    </div>
+);
 
+/** Numeric stepper (+/− buttons) */
+const Stepper = ({ label, value, min = 1, max = 10, onChange }) => (
+    <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        background: T.surfaceContHigh,
+        borderRadius: '8px',
+        padding: '10px 14px',
+        border: `1px solid ${T.outlineVariant}`,
+    }}>
+        <span style={{
+            fontFamily: T.fontHead,
+            fontSize: '0.85rem',
+            fontWeight: 600,
+            color: T.onSurface,
+        }}>{label}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button
+                onClick={() => onChange(Math.max(min, value - 1))}
+                disabled={value <= min}
+                style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '6px',
+                    border: `1px solid ${T.outlineVariant}`,
+                    background: value <= min ? T.surfaceCont : T.surfaceContLow,
+                    color: value <= min ? T.outlineVariant : T.primaryCont,
+                    cursor: value <= min ? 'not-allowed' : 'pointer',
+                    fontFamily: T.fontHead,
+                    fontSize: '1.1rem',
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.15s ease',
+                }}
+            >−</button>
+            <span style={{
+                fontFamily: T.fontHead,
+                fontSize: '1.3rem',
+                fontWeight: 700,
+                color: T.primaryCont,
+                minWidth: '28px',
+                textAlign: 'center',
+                fontVariantNumeric: 'tabular-nums',
+            }}>{value}</span>
+            <button
+                onClick={() => onChange(Math.min(max, value + 1))}
+                disabled={value >= max}
+                style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '6px',
+                    border: `1px solid ${T.outlineVariant}`,
+                    background: value >= max ? T.surfaceCont : T.surfaceContLow,
+                    color: value >= max ? T.outlineVariant : T.primaryCont,
+                    cursor: value >= max ? 'not-allowed' : 'pointer',
+                    fontFamily: T.fontHead,
+                    fontSize: '1.1rem',
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.15s ease',
+                }}
+            >+</button>
+        </div>
+    </div>
+);
+
+/** Pulsing skeleton for loading state */
+const SkeletonPulse = ({ width = '100%', height = '2.1rem' }) => (
+    <div style={{
+        width,
+        height,
+        borderRadius: '6px',
+        background: `linear-gradient(90deg, ${T.surfaceContHigh} 25%, ${T.surfaceContHighest} 50%, ${T.surfaceContHigh} 75%)`,
+        backgroundSize: '200% 100%',
+        animation: 'shimmer 1.5s infinite',
+    }} />
+);
+
+// ─── Sidebar ──────────────────────────────────────────────────────────────────
+const Sidebar = ({
+    quantity,
+    viewMode, setViewMode,
+    environment, setEnvironment,
+    selections, setSelections,
+    estimate, estimateLoading,
+}) => {
     const placedCount = quantity;
-    const productName = `Modul ${placedCount}× ${termination.replace('Modul ', '')}`;
-    const totalSqm    = placedCount * SQM_PER_MODULE;
-    const totalUF     = placedCount * (UF_PER_MODULE[termination] ?? 550);
+
+    // Derive display values from the API estimate, fall back to simple math
+    const totalSqm = estimate?.geometry?.gross_area_m2 ?? (placedCount * 10.89);
+    const totalUF = estimate?.totals?.final_total_uf;
+    const pricePerM2UF = estimate?.totals?.price_per_m2_uf;
+    const ufSource = estimate?.totals?.uf_source ?? 'pendiente';
+
+    // Max constraints for steppers
+    const maxBedrooms = Math.max(1, placedCount - 1);
+    const maxBathrooms = Math.max(1, Math.floor(placedCount / 2));
+
+    const updateSelection = (key, value) => {
+        setSelections(prev => ({ ...prev, [key]: value }));
+    };
 
     return (
         <div style={{
@@ -229,16 +345,19 @@ const Sidebar = ({ quantity, viewMode, setViewMode, environment, setEnvironment 
                 </div>
             )}
 
-            {/* ── Terminaciones ────────────────────────────── */}
+            {/* ── Wall panel type ──────────────────────────── */}
             <div style={{ marginBottom: '12px' }}>
-                <SectionLabel>Terminaciones</SectionLabel>
+                <SectionLabel>Panel de muro</SectionLabel>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {['Modul Lite', 'Modul Plus'].map((opt) => {
-                        const active = termination === opt;
+                    {[
+                        { value: 'mgo_sip_122', label: 'SIP MgO 122 mm', desc: 'Aislación estándar' },
+                        { value: 'mgo_sip_152', label: 'SIP MgO 152 mm', desc: 'Aislación reforzada' },
+                    ].map((opt) => {
+                        const active = selections.wallPanelType === opt.value;
                         return (
                             <button
-                                key={opt}
-                                onClick={() => setTermination(opt)}
+                                key={opt.value}
+                                onClick={() => updateSelection('wallPanelType', opt.value)}
                                 style={{
                                     padding: '13px 16px',
                                     borderRadius: '8px',
@@ -251,7 +370,7 @@ const Sidebar = ({ quantity, viewMode, setViewMode, environment, setEnvironment 
                                         : T.surfaceContHigh,
                                     color: active ? T.primaryCont : T.onSurface,
                                     fontFamily: T.fontHead,
-                                    fontSize: '0.98rem',
+                                    fontSize: '0.92rem',
                                     fontWeight: 600,
                                     textAlign: 'left',
                                     transition: 'all 0.18s ease',
@@ -260,11 +379,65 @@ const Sidebar = ({ quantity, viewMode, setViewMode, environment, setEnvironment 
                                         : 'none',
                                 }}
                             >
-                                {opt}
+                                <div>{opt.label}</div>
+                                <div style={{
+                                    fontFamily: T.fontBody,
+                                    fontSize: '0.75rem',
+                                    fontWeight: 400,
+                                    color: active ? T.onSurfaceVariant : T.outline,
+                                    marginTop: '3px',
+                                }}>{opt.desc}</div>
                             </button>
                         );
                     })}
                 </div>
+            </div>
+
+            {/* ── Kitchen quality ───────────────────────────── */}
+            <div style={{ marginBottom: '12px' }}>
+                <SectionLabel>Cocina</SectionLabel>
+                <SegmentedSelector
+                    options={[
+                        { value: 'basic', label: 'Basic' },
+                        { value: 'standard', label: 'Standard' },
+                        { value: 'premium', label: 'Premium' },
+                    ]}
+                    value={selections.kitchenType}
+                    onChange={(v) => updateSelection('kitchenType', v)}
+                />
+            </div>
+
+            {/* ── Bathroom quality ──────────────────────────── */}
+            <div style={{ marginBottom: '12px' }}>
+                <SectionLabel>Baño</SectionLabel>
+                <SegmentedSelector
+                    options={[
+                        { value: 'basic', label: 'Basic' },
+                        { value: 'standard', label: 'Standard' },
+                        { value: 'premium', label: 'Premium' },
+                    ]}
+                    value={selections.bathroomType}
+                    onChange={(v) => updateSelection('bathroomType', v)}
+                />
+            </div>
+
+            {/* ── Bedrooms / Bathrooms steppers ─────────────── */}
+            <div style={{ marginBottom: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <SectionLabel>Habitaciones</SectionLabel>
+                <Stepper
+                    label="Dormitorios"
+                    value={selections.bedrooms}
+                    min={1}
+                    max={maxBedrooms}
+                    onChange={(v) => updateSelection('bedrooms', v)}
+                />
+                <Stepper
+                    label="Baños"
+                    value={selections.bathrooms}
+                    min={1}
+                    max={maxBathrooms}
+                    onChange={(v) => updateSelection('bathrooms', v)}
+                />
             </div>
 
             {/* ── Spacer ───────────────────────────────────── */}
@@ -289,7 +462,7 @@ const Sidebar = ({ quantity, viewMode, setViewMode, environment, setEnvironment 
                         color: T.onSurface,
                         letterSpacing: '-0.01em',
                         lineHeight: 1.25,
-                    }}>{productName}</div>
+                    }}>{`Modul ${placedCount}×`}</div>
                 </div>
 
                 {/* Divider */}
@@ -300,7 +473,11 @@ const Sidebar = ({ quantity, viewMode, setViewMode, environment, setEnvironment 
 
                 {/* Metrics row */}
                 <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
-                    <MetricCard label="Superficie" value={totalSqm} unit="m²" />
+                    <MetricCard
+                        label="Superficie"
+                        value={typeof totalSqm === 'number' ? totalSqm.toFixed(1) : '—'}
+                        unit="m²"
+                    />
                     <MetricCard
                         label="Módulos"
                         value={placedCount}
@@ -314,29 +491,57 @@ const Sidebar = ({ quantity, viewMode, setViewMode, environment, setEnvironment 
                     borderRadius: '10px',
                     padding: '12px 14px',
                     border: `1px solid rgba(0, 218, 243, 0.15)`,
-                    marginBottom: '10px',
+                    marginBottom: '6px',
                 }}>
                     <SectionLabel style={{ marginBottom: '6px' }}>Precio estimado</SectionLabel>
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-                        <span style={{
-                            fontFamily: T.fontHead,
-                            fontSize: '2.1rem',
-                            fontWeight: 700,
-                            color: T.primaryCont,
-                            letterSpacing: '-0.02em',
-                            fontVariantNumeric: 'tabular-nums',
-                            textShadow: '0 0 20px rgba(0, 229, 255, 0.4)',
-                        }}>
-                            {totalUF.toLocaleString('es-CL')}
-                        </span>
-                        <span style={{
-                            fontFamily: T.fontHead,
-                            fontSize: '1.05rem',
-                            fontWeight: 600,
-                            color: T.surfaceTint,
-                        }}>UF</span>
-                    </div>
+                    {estimateLoading && !estimate ? (
+                        <SkeletonPulse height="2.4rem" />
+                    ) : totalUF != null ? (
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+                            <span style={{
+                                fontFamily: T.fontHead,
+                                fontSize: '2.1rem',
+                                fontWeight: 700,
+                                color: T.primaryCont,
+                                letterSpacing: '-0.02em',
+                                fontVariantNumeric: 'tabular-nums',
+                                textShadow: '0 0 20px rgba(0, 229, 255, 0.4)',
+                                opacity: estimateLoading ? 0.5 : 1,
+                                transition: 'opacity 0.2s ease',
+                            }}>
+                                {totalUF.toLocaleString('es-CL', { maximumFractionDigits: 0 })}
+                            </span>
+                            <span style={{
+                                fontFamily: T.fontHead,
+                                fontSize: '1.05rem',
+                                fontWeight: 600,
+                                color: T.surfaceTint,
+                            }}>UF</span>
+                        </div>
+                    ) : (
+                        <div style={{
+                            fontFamily: T.fontBody,
+                            fontSize: '0.9rem',
+                            color: T.outline,
+                        }}>Configurando...</div>
+                    )}
                 </div>
+
+                {/* Price per m² */}
+                {pricePerM2UF != null && (
+                    <div style={{
+                        fontFamily: T.fontHead,
+                        fontSize: '0.8rem',
+                        fontWeight: 500,
+                        color: T.onSurfaceVariant,
+                        textAlign: 'right',
+                        marginBottom: '10px',
+                        opacity: estimateLoading ? 0.5 : 1,
+                        transition: 'opacity 0.2s ease',
+                    }}>
+                        {pricePerM2UF.toLocaleString('es-CL', { maximumFractionDigits: 1 })} UF/m²
+                    </div>
+                )}
 
                 {/* Disclaimer */}
                 <div style={{
@@ -356,11 +561,20 @@ const Sidebar = ({ quantity, viewMode, setViewMode, environment, setEnvironment 
                         lineHeight: 1.6,
                         color: 'rgba(255, 220, 130, 0.85)',
                     }}>
-                        Precio <strong>referencial</strong> sujeto a valor de UF del día y condiciones de terreno.
+                        Precio <strong>referencial</strong> sujeto a valor de UF del día
+                        {ufSource !== 'SII' && ' (UF aproximada)'} y condiciones de terreno.
                         La cotización oficial será confirmada por nuestro equipo de ventas.
                     </p>
                 </div>
             </div>
+
+            {/* ── Shimmer keyframes (injected once) ──────────── */}
+            <style>{`
+                @keyframes shimmer {
+                    0% { background-position: 200% 0; }
+                    100% { background-position: -200% 0; }
+                }
+            `}</style>
 
         </div>
     );

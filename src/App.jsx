@@ -1,5 +1,5 @@
 import { Canvas } from "@react-three/fiber";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Experience } from "./components/Experience";
 import Sidebar from "./components/Sidebar";
 import GridEditor from "./components/GridEditor";
@@ -19,6 +19,11 @@ function createInitialGrid() {
     return g;
 }
 
+/** Convert the React boolean grid to the string format the API expects. */
+function gridToStrings(grid) {
+    return grid.map(row => row.map(cell => (cell ? 'X' : '.')).join(''));
+}
+
 function App() {
     const [viewMode, setViewMode] = useState('3d');
     const [environment, setEnvironment] = useState('norte');
@@ -29,7 +34,58 @@ function App() {
     // If null, analyzeGrid falls back to first-found component.
     const [masterAnchor, setMasterAnchor] = useState(`${INIT_ROW},${INIT_COL}`);
 
+    // ── Home configuration selections ─────────────────────────────────
+    const [selections, setSelections] = useState({
+        wallPanelType: 'mgo_sip_122',
+        kitchenType: 'standard',
+        bathroomType: 'standard',
+        bedrooms: 2,
+        bathrooms: 1,
+    });
+
+    // ── Estimate from API ─────────────────────────────────────────────
+    const [estimate, setEstimate] = useState(null);
+    const [estimateLoading, setEstimateLoading] = useState(false);
+
     const quantity = grid.flat().filter(Boolean).length;
+
+    // Debounced API call whenever grid or selections change
+    useEffect(() => {
+        // Don't call if grid is empty
+        if (quantity === 0) {
+            setEstimate(null);
+            return;
+        }
+
+        setEstimateLoading(true);
+        const timer = setTimeout(async () => {
+            try {
+                const res = await fetch('/api/estimate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        grid: gridToStrings(grid),
+                        wall_panel_type: selections.wallPanelType,
+                        kitchen_type: selections.kitchenType,
+                        bathroom_type: selections.bathroomType,
+                        bedrooms: selections.bedrooms,
+                        bathrooms: selections.bathrooms,
+                        floor_system_type: 'standard',
+                        roof_system_type: 'standard',
+                    }),
+                });
+                if (res.ok) {
+                    setEstimate(await res.json());
+                }
+            } catch (err) {
+                console.warn('Estimate API unavailable:', err.message);
+            } finally {
+                setEstimateLoading(false);
+            }
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [grid, selections, quantity]);
 
     return (
         <div className="w-full h-screen flex flex-row overflow-hidden bg-neutral-900">
@@ -51,7 +107,17 @@ function App() {
                     />
                 )}
             </div>
-            <Sidebar quantity={quantity} viewMode={viewMode} setViewMode={setViewMode} environment={environment} setEnvironment={setEnvironment} />
+            <Sidebar
+                quantity={quantity}
+                viewMode={viewMode}
+                setViewMode={setViewMode}
+                environment={environment}
+                setEnvironment={setEnvironment}
+                selections={selections}
+                setSelections={setSelections}
+                estimate={estimate}
+                estimateLoading={estimateLoading}
+            />
         </div>
     );
 }

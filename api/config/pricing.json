@@ -1,0 +1,131 @@
+{
+  "company": {
+    "name": "Modul",
+    "tagline": "Tu modular en semanas, no en meses"
+  },
+  "quote_defaults": {
+    "advance_payment_pct": 0.2,
+    "vat_pct": 0.19,
+    "notes": [
+      "El valor en pesos enviado hoy esta actualizado con la UF del dia de emision de la cotizacion.",
+      "La orden de trabajo se enviara a produccion posterior a la confirmacion comercial y pago de anticipo.",
+      "Cualquier solicitud o cambio generado despues de esta cotizacion se considera adicional."
+    ],
+    "payment_terms": [
+      "Transferencia bancaria.",
+      "Si se paga con Tarjeta de Credito se debe sumar 3,5% al monto a transferir.",
+      "20% anticipo con orden de compra.",
+      "20% de abono con obra gruesa terminada.",
+      "20% de abono con muebles y equipamiento interior instalados.",
+      "15% de abono con modulos terminados en fabrica.",
+      "10% con obras en terreno finalizadas.",
+      "10% saldo con casa instalada en terreno.",
+      "5% saldo recepcion conforme."
+    ]
+  },
+  "defaults": {
+    "currency": "CLP",
+    "module_size_m": 3.3,
+    "wall_height_m": 2.5,
+    "roof_area_factor": 1.08,
+    "floor_waste_factor": 1.04,
+    "plan_cell_pixels": 120,
+    "interior_partition_factor": 0.42,
+    "foundation_cost_per_module": 420000,
+    "engineering_cost_flat": 680000,
+    "site_setup_cost_flat": 420000,
+    "transport_cost_per_module": 160000,
+    "manufacturing_labor_per_m2": 145000,
+    "installation_labor_per_m2": 65000,
+    "overhead_markup_pct": 0.12,
+    "profit_markup_pct": 0.18,
+    "contingency_pct": 0.05
+  },
+  "static_catalog": {
+    "wall_panels": {
+      "mgo_sip_122": {
+        "label": "Panel SIP MgO 122 mm",
+        "price_per_m2": 86500
+      },
+      "mgo_sip_152": {
+        "label": "Panel SIP MgO 152 mm",
+        "price_per_m2": 99500
+      }
+    },
+    "floor_systems": {
+      "standard": {
+        "label": "Sistema de piso estandar",
+        "price_per_m2": 64500
+      }
+    },
+    "roof_systems": {
+      "standard": {
+        "label": "Sistema de cubierta estandar",
+        "price_per_m2": 58500
+      }
+    },
+    "kitchens": {
+      "basic": {
+        "label": "Cocina basic",
+        "price": 1650000
+      },
+      "standard": {
+        "label": "Cocina standard",
+        "price": 2350000
+      },
+      "premium": {
+        "label": "Cocina premium",
+        "price": 3450000
+      }
+    },
+    "bathrooms": {
+      "basic": {
+        "label": "Bano basic",
+        "price": 980000
+      },
+      "standard": {
+        "label": "Bano standard",
+        "price": 1420000
+      },
+      "premium": {
+        "label": "Bano premium",
+        "price": 1980000
+      }
+    },
+    "openings": {
+      "exterior_door": {
+        "label": "Puerta exterior",
+        "price": 285000
+      },
+      "interior_door": {
+        "label": "Puerta interior",
+        "price": 119000
+      },
+      "window_standard": {
+        "label": "Ventana termopanel estandar",
+        "price": 245000
+      }
+    },
+    "misc": {
+      "fasteners_pct_of_materials": 0.03,
+      "electrical_pct_of_area_cost": 16500,
+      "plumbing_pct_of_area_cost": 21000
+    }
+  },
+  "live_sources": {
+    "steel_frame_main": {
+      "label": "Perfil Rectangular Acero 100x50x2 mm 6 m",
+      "url": "https://www.sodimac.cl/sodimac-cl/lista/CATG10755/Perfiles",
+      "match_text": "Perfil Rectangular Acero 100x50x2 mm 6 mPor SODIMAC",
+      "unit": "stick_6m",
+      "fallback_price": 24400
+    },
+    "steel_bracing": {
+      "label": "Estructura Omega Acero Galvanizado 38x35x0.85 mm 6 m",
+      "url": "https://www.sodimac.cl/sodimac-cl/lista/CATG10755/Perfiles",
+      "match_text": "Estructura Omega Acero Galvanizado 38x35x0.85 mm 6 mPor SODIMAC",
+      "unit": "stick_6m",
+      "fallback_price": 6600
+    }
+  }
+}

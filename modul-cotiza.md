@@ -42,3 +42,8 @@ The MVP for this project needs to be able to, at least:
 - Anti-bot protection.
 - Professional-looking basic CAD design of the selected home configuration (Approximate).
 - Exporting quote in PDF format.
+- Support for / consideration in quote:
+    - Choosing roller courtains
+    - Asking for heating/AC
+    - Different wall types
+    - Water heating options
