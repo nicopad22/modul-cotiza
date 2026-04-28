@@ -1,191 +1,367 @@
 import React, { useState } from 'react';
 
+// ─── Design tokens (from design.md) ───────────────────────────────────────────
+const T = {
+    // Surfaces
+    bg:               '#131313',
+    surfaceContLow:   '#1c1b1b',
+    surfaceCont:      '#201f1f',
+    surfaceContHigh:  '#2a2a2a',
+    surfaceContHighest: '#353534',
+    // Text
+    onSurface:        '#e5e2e1',
+    onSurfaceVariant: '#bac9cc',
+    outline:          '#849396',
+    outlineVariant:   '#3b494c',
+    // Accent – Electric Cyan
+    primary:          '#c3f5ff',
+    primaryCont:      '#00e5ff',
+    onPrimary:        '#00363d',
+    surfaceTint:      '#00daf3',
+    // Error / tertiary warn
+    tertiary:         '#ffe7e7',
+    tertiaryContainer:'#ffc1c4',
+    // Fonts
+    fontHead:         "'Space Grotesk', system-ui, sans-serif",
+    fontBody:         "'Manrope', system-ui, sans-serif",
+};
+
+// ─── Pricing ─────────────────────────────────────────────────────────────────
+const UF_PER_MODULE = { 'Modul Lite': 550, 'Modul Plus': 750 };
+const SQM_PER_MODULE = 38;
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+/** Section label – uppercase, letter-spaced, muted */
+const SectionLabel = ({ children, style = {} }) => (
+    <div style={{
+        fontFamily: T.fontHead,
+        fontSize: '0.75rem',
+        fontWeight: 700,
+        letterSpacing: '0.12em',
+        textTransform: 'uppercase',
+        color: T.onSurfaceVariant,
+        marginBottom: '10px',
+        ...style,
+    }}>
+        {children}
+    </div>
+);
+
+/** Glassmorphic card container */
+const Card = ({ children, style = {} }) => (
+    <div style={{
+        background: T.surfaceContLow,
+        borderRadius: '12px',
+        border: `1px solid ${T.outlineVariant}`,
+        padding: '16px',
+        marginBottom: '12px',
+        ...style,
+    }}>
+        {children}
+    </div>
+);
+
+/** Toggle pill button (active = cyan glow) */
+const ToggleBtn = ({ active, onClick, children }) => (
+    <button
+        onClick={onClick}
+        style={{
+            flex: 1,
+            padding: '11px 0',
+            borderRadius: '8px',
+            border: active ? `1px solid ${T.surfaceTint}` : '1px solid transparent',
+            cursor: 'pointer',
+            fontFamily: T.fontHead,
+            fontSize: '0.92rem',
+            fontWeight: 600,
+            letterSpacing: '0.04em',
+            transition: 'all 0.2s ease',
+            background: active
+                ? `rgba(0, 218, 243, 0.15)`
+                : 'transparent',
+            color: active ? T.primaryCont : T.onSurfaceVariant,
+            boxShadow: active
+                ? '0 0 12px rgba(0, 229, 255, 0.25)'
+                : 'none',
+        }}
+    >
+        {children}
+    </button>
+);
+
+/** Metric mini-card (surface + cyan value) */
+const MetricCard = ({ label, value, unit }) => (
+    <div style={{
+        flex: 1,
+        background: T.surfaceContHigh,
+        borderRadius: '8px',
+        padding: '14px 14px',
+        border: `1px solid ${T.outlineVariant}`,
+    }}>
+        <div style={{
+            fontFamily: T.fontHead,
+            fontSize: '0.7rem',
+            fontWeight: 700,
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            color: T.onSurfaceVariant,
+            marginBottom: '8px',
+        }}>{label}</div>
+        <div style={{
+            fontFamily: T.fontHead,
+            fontSize: '1.65rem',
+            fontWeight: 700,
+            color: T.primaryCont,
+            lineHeight: 1,
+            fontVariantNumeric: 'tabular-nums',
+        }}>{value}</div>
+        <div style={{
+            fontFamily: T.fontBody,
+            fontSize: '0.78rem',
+            color: T.outline,
+            marginTop: '5px',
+        }}>{unit}</div>
+    </div>
+);
+
+// ─── Sidebar ──────────────────────────────────────────────────────────────────
 const Sidebar = ({ quantity, viewMode, setViewMode, environment, setEnvironment }) => {
-    const [sliderValue, setSliderValue] = useState(50);
-    const [termination, setTermination] = useState('Standard');
+    const [termination, setTermination] = useState('Modul Lite');
 
     const placedCount = quantity;
+    const productName = `Modul ${placedCount}× ${termination.replace('Modul ', '')}`;
+    const totalSqm    = placedCount * SQM_PER_MODULE;
+    const totalUF     = placedCount * (UF_PER_MODULE[termination] ?? 550);
 
     return (
-        <div className="w-[20%] min-w-[300px] h-full bg-neutral-100 p-5 box-border flex flex-col border-l border-neutral-200 overflow-y-auto">
+        <div style={{
+            width: '22%',
+            minWidth: '340px',
+            maxWidth: '400px',
+            height: '100%',
+            background: T.bg,
+            borderRight: `1px solid ${T.outlineVariant}`,
+            display: 'flex',
+            flexDirection: 'column',
+            padding: '24px 20px',
+            boxSizing: 'border-box',
+            overflowY: 'auto',
+            fontFamily: T.fontBody,
+            fontSize: '1rem',
+            color: T.onSurface,
+            // Custom scrollbar
+            scrollbarWidth: 'thin',
+            scrollbarColor: `${T.outlineVariant} transparent`,
+        }}>
 
-            {/* Logo */}
-            <div className="mb-6 text-center">
-                <div className="flex items-center justify-center mb-2.5">
-                    <img src="/logo-modul-hd-negro.png" alt="Modul Logo" className="w-20 h-20 object-contain" />
+            {/* ── Logo + title ─────────────────────────────── */}
+            <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <img
+                    src="/logo-modul-hd-negro.png"
+                    alt="Modul Logo"
+                    style={{
+                        width: '40px',
+                        height: '40px',
+                        objectFit: 'contain',
+                        filter: 'brightness(0) invert(1)',
+                        opacity: 0.9,
+                    }}
+                />
+                <div>
+                    <h1 style={{
+                        margin: 0,
+                        fontFamily: T.fontHead,
+                        fontSize: '1.35rem',
+                        fontWeight: 700,
+                        color: T.onSurface,
+                        letterSpacing: '-0.01em',
+                        lineHeight: 1.1,
+                    }}>Mi Modul</h1>
+                    <div style={{
+                        fontFamily: T.fontBody,
+                        fontSize: '0.85rem',
+                        color: T.onSurfaceVariant,
+                        marginTop: '3px',
+                    }}>Configurador</div>
                 </div>
-                <h1 className="m-0 text-2xl text-neutral-800">Mi Modul</h1>
             </div>
 
-            {/* View mode toggle */}
-            <div className="bg-neutral-200 rounded-xl p-1 flex gap-1 mb-5">
-                <button
-                    onClick={() => setViewMode('3d')}
-                    style={{
-                        flex: 1,
-                        padding: '8px 0',
-                        borderRadius: '10px',
-                        border: 'none',
-                        cursor: 'pointer',
-                        fontFamily: 'inherit',
-                        fontSize: '0.82rem',
-                        fontWeight: 600,
-                        transition: 'all 0.2s ease',
-                        background: viewMode === '3d'
-                            ? 'linear-gradient(135deg, #6366f1, #8b5cf6)'
-                            : 'transparent',
-                        color: viewMode === '3d' ? '#fff' : '#64748b',
-                        boxShadow: viewMode === '3d'
-                            ? '0 2px 8px rgba(99,102,241,0.4)'
-                            : 'none',
-                    }}
-                >
-                    🧊 Vista 3D
-                </button>
-                <button
-                    onClick={() => setViewMode('2d')}
-                    style={{
-                        flex: 1,
-                        padding: '8px 0',
-                        borderRadius: '10px',
-                        border: 'none',
-                        cursor: 'pointer',
-                        fontFamily: 'inherit',
-                        fontSize: '0.82rem',
-                        fontWeight: 600,
-                        transition: 'all 0.2s ease',
-                        background: viewMode === '2d'
-                            ? 'linear-gradient(135deg, #6366f1, #8b5cf6)'
-                            : 'transparent',
-                        color: viewMode === '2d' ? '#fff' : '#64748b',
-                        boxShadow: viewMode === '2d'
-                            ? '0 2px 8px rgba(99,102,241,0.4)'
-                            : 'none',
-                    }}
-                >
-                    🗺 Planta 2D
-                </button>
+            {/* ── View mode toggle ─────────────────────────── */}
+            <div style={{ marginBottom: '12px' }}>
+                <SectionLabel>Vista</SectionLabel>
+                <div style={{
+                    background: T.surfaceCont,
+                    borderRadius: '10px',
+                    padding: '4px',
+                    display: 'flex',
+                    gap: '4px',
+                    border: `1px solid ${T.outlineVariant}`,
+                }}>
+                    <ToggleBtn active={viewMode === '3d'} onClick={() => setViewMode('3d')}>
+                        🧊 3D
+                    </ToggleBtn>
+                    <ToggleBtn active={viewMode === '2d'} onClick={() => setViewMode('2d')}>
+                        🗺 Planta
+                    </ToggleBtn>
+                </div>
             </div>
 
-            {/* Environment toggle */}
+            {/* ── Environment toggle (3D only) ─────────────── */}
             {viewMode === '3d' && (
-                <div className="bg-neutral-200 rounded-xl p-1 flex gap-1 mb-5">
-                    <button
-                        onClick={() => setEnvironment('norte')}
-                        style={{
-                            flex: 1,
-                            padding: '8px 0',
-                            borderRadius: '10px',
-                            border: 'none',
-                            cursor: 'pointer',
-                            fontFamily: 'inherit',
-                            fontSize: '0.82rem',
-                            fontWeight: 600,
-                            transition: 'all 0.2s ease',
-                            background: environment === 'norte'
-                                ? 'linear-gradient(135deg, #6366f1, #8b5cf6)'
-                                : 'transparent',
-                            color: environment === 'norte' ? '#fff' : '#64748b',
-                            boxShadow: environment === 'norte'
-                                ? '0 2px 8px rgba(99,102,241,0.4)'
-                                : 'none',
-                        }}
-                    >
-                        🏜 Norte
-                    </button>
-                    <button
-                        onClick={() => setEnvironment('sur')}
-                        style={{
-                            flex: 1,
-                            padding: '8px 0',
-                            borderRadius: '10px',
-                            border: 'none',
-                            cursor: 'pointer',
-                            fontFamily: 'inherit',
-                            fontSize: '0.82rem',
-                            fontWeight: 600,
-                            transition: 'all 0.2s ease',
-                            background: environment === 'sur'
-                                ? 'linear-gradient(135deg, #6366f1, #8b5cf6)'
-                                : 'transparent',
-                            color: environment === 'sur' ? '#fff' : '#64748b',
-                            boxShadow: environment === 'sur'
-                                ? '0 2px 8px rgba(99,102,241,0.4)'
-                                : 'none',
-                        }}
-                    >
-                        🌲 Sur
-                    </button>
+                <div style={{ marginBottom: '12px' }}>
+                    <SectionLabel>Entorno</SectionLabel>
+                    <div style={{
+                        background: T.surfaceCont,
+                        borderRadius: '10px',
+                        padding: '4px',
+                        display: 'flex',
+                        gap: '4px',
+                        border: `1px solid ${T.outlineVariant}`,
+                    }}>
+                        <ToggleBtn active={environment === 'norte'} onClick={() => setEnvironment('norte')}>
+                            🏜 Norte
+                        </ToggleBtn>
+                        <ToggleBtn active={environment === 'sur'} onClick={() => setEnvironment('sur')}>
+                            🌲 Sur
+                        </ToggleBtn>
+                    </div>
                 </div>
             )}
 
-            {/* Module count (read-only) */}
-            <div className="bg-white p-4 rounded-lg mb-5 shadow-sm">
-                <h3 className="mt-0 mb-2.5 text-base text-neutral-800 font-semibold">Módulos</h3>
-                <div
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        padding: '10px 14px',
-                        borderRadius: '10px',
-                        background: placedCount > 1
-                            ? 'linear-gradient(135deg, rgba(99,102,241,0.08), rgba(139,92,246,0.06))'
-                            : 'rgba(0,0,0,0.03)',
-                        border: placedCount > 1
-                            ? '1px solid rgba(99,102,241,0.2)'
-                            : '1px solid rgba(0,0,0,0.06)',
-                    }}
-                >
-                    <div style={{
-                        width: '32px', height: '32px', borderRadius: '8px',
-                        background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        flexShrink: 0,
-                        boxShadow: '0 2px 8px rgba(99,102,241,0.3)',
-                    }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                            <rect x="3" y="8" width="18" height="12" rx="2" fill="rgba(255,255,255,0.9)" />
-                            <rect x="7" y="4" width="10" height="6" rx="1.5" fill="rgba(255,255,255,0.6)" />
-                        </svg>
-                    </div>
-                    <div>
-                        <div style={{ fontWeight: 700, fontSize: '1.15rem', color: '#1e293b', lineHeight: 1 }}>
-                            {placedCount}
-                        </div>
-                        <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '2px' }}>
-                            {placedCount === 1 ? 'módulo' : 'módulos'}
-                            {viewMode === '3d' && placedCount <= 1
-                                ? ' — configura en Planta 2D'
-                                : ''}
-                        </div>
-                    </div>
+            {/* ── Terminaciones ────────────────────────────── */}
+            <div style={{ marginBottom: '12px' }}>
+                <SectionLabel>Terminaciones</SectionLabel>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {['Modul Lite', 'Modul Plus'].map((opt) => {
+                        const active = termination === opt;
+                        return (
+                            <button
+                                key={opt}
+                                onClick={() => setTermination(opt)}
+                                style={{
+                                    padding: '13px 16px',
+                                    borderRadius: '8px',
+                                    border: active
+                                        ? `1px solid ${T.surfaceTint}`
+                                        : `1px solid ${T.outlineVariant}`,
+                                    cursor: 'pointer',
+                                    background: active
+                                        ? `rgba(0, 218, 243, 0.10)`
+                                        : T.surfaceContHigh,
+                                    color: active ? T.primaryCont : T.onSurface,
+                                    fontFamily: T.fontHead,
+                                    fontSize: '0.98rem',
+                                    fontWeight: 600,
+                                    textAlign: 'left',
+                                    transition: 'all 0.18s ease',
+                                    boxShadow: active
+                                        ? '0 0 12px rgba(0, 229, 255, 0.2)'
+                                        : 'none',
+                                }}
+                            >
+                                {opt}
+                            </button>
+                        );
+                    })}
                 </div>
-                {viewMode === '3d' && (
-                    <p style={{ margin: '8px 0 0', fontSize: '0.72rem', color: '#94a3b8' }}>
-                        Cambia a <strong>Planta 2D</strong> para colocar módulos en el plano.
-                    </p>
-                )}
             </div>
 
-            {/* Terminaciones */}
-            <div className="bg-white p-4 rounded-lg mb-5 shadow-sm">
-                <h3 className="mt-0 mb-2.5 text-base text-neutral-800 font-semibold">Terminaciones</h3>
-                <div className="flex flex-col gap-2">
-                    {['Standard', 'Premium', 'Luxury'].map((opt) => (
-                        <button
-                            key={opt}
-                            onClick={() => setTermination(opt)}
-                            className={`p-2 border rounded text-left cursor-pointer transition-colors text-neutral-900 ${termination === opt
-                                ? 'border-blue-500 bg-blue-50'
-                                : 'border-neutral-200 bg-white hover:bg-neutral-50'
-                                }`}
-                        >
-                            {opt}
-                        </button>
-                    ))}
+            {/* ── Spacer ───────────────────────────────────── */}
+            <div style={{ flex: 1 }} />
+
+            {/* ── Summary card ─────────────────────────────── */}
+            <div style={{
+                background: `linear-gradient(160deg, ${T.surfaceContLow} 0%, #0e1c1f 100%)`,
+                borderRadius: '14px',
+                border: `1px solid rgba(0, 218, 243, 0.18)`,
+                padding: '16px',
+                boxShadow: '0 0 24px rgba(0, 218, 243, 0.08)',
+            }}>
+
+                {/* Product name */}
+                <div style={{ marginBottom: '14px' }}>
+                    <SectionLabel>Producto</SectionLabel>
+                    <div style={{
+                        fontFamily: T.fontHead,
+                        fontSize: '1.25rem',
+                        fontWeight: 700,
+                        color: T.onSurface,
+                        letterSpacing: '-0.01em',
+                        lineHeight: 1.25,
+                    }}>{productName}</div>
+                </div>
+
+                {/* Divider */}
+                <div style={{
+                    borderTop: `1px solid ${T.outlineVariant}`,
+                    marginBottom: '14px',
+                }} />
+
+                {/* Metrics row */}
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
+                    <MetricCard label="Superficie" value={totalSqm} unit="m²" />
+                    <MetricCard
+                        label="Módulos"
+                        value={placedCount}
+                        unit={placedCount === 1 ? 'módulo' : 'módulos'}
+                    />
+                </div>
+
+                {/* UF Price */}
+                <div style={{
+                    background: T.surfaceContHigh,
+                    borderRadius: '10px',
+                    padding: '12px 14px',
+                    border: `1px solid rgba(0, 218, 243, 0.15)`,
+                    marginBottom: '10px',
+                }}>
+                    <SectionLabel style={{ marginBottom: '6px' }}>Precio estimado</SectionLabel>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+                        <span style={{
+                            fontFamily: T.fontHead,
+                            fontSize: '2.1rem',
+                            fontWeight: 700,
+                            color: T.primaryCont,
+                            letterSpacing: '-0.02em',
+                            fontVariantNumeric: 'tabular-nums',
+                            textShadow: '0 0 20px rgba(0, 229, 255, 0.4)',
+                        }}>
+                            {totalUF.toLocaleString('es-CL')}
+                        </span>
+                        <span style={{
+                            fontFamily: T.fontHead,
+                            fontSize: '1.05rem',
+                            fontWeight: 600,
+                            color: T.surfaceTint,
+                        }}>UF</span>
+                    </div>
+                </div>
+
+                {/* Disclaimer */}
+                <div style={{
+                    background: 'rgba(255, 231, 36, 0.05)',
+                    borderRadius: '8px',
+                    padding: '8px 10px',
+                    border: '1px solid rgba(255, 213, 0, 0.15)',
+                    display: 'flex',
+                    gap: '7px',
+                    alignItems: 'flex-start',
+                }}>
+                    <span style={{ fontSize: '0.9rem', flexShrink: 0, marginTop: '1px' }}>⚠️</span>
+                    <p style={{
+                        margin: 0,
+                        fontFamily: T.fontBody,
+                        fontSize: '0.8rem',
+                        lineHeight: 1.6,
+                        color: 'rgba(255, 220, 130, 0.85)',
+                    }}>
+                        Precio <strong>referencial</strong> sujeto a valor de UF del día y condiciones de terreno.
+                        La cotización oficial será confirmada por nuestro equipo de ventas.
+                    </p>
                 </div>
             </div>
+
         </div>
     );
 };
