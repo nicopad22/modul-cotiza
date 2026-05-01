@@ -102,7 +102,7 @@ class QuoteRequest(BaseModel):
 # ── Endpoints ──────────────────────────────────────────────────────────────────
 
 @app.post("/api/estimate")
-def estimate(body: EstimateRequest):
+def estimate(body: EstimateRequest) -> dict[str, Any]:
     """Real-time price estimate for the sidebar configurator."""
     config = _get_config()
     live_prices = _get_live_prices()
@@ -125,6 +125,8 @@ def estimate(body: EstimateRequest):
         quote = build_quote(project, config, live_prices)
     except (ValueError, KeyError) as exc:
         raise HTTPException(status_code=422, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Pricing engine error: {str(exc)}")
 
     geometry = quote["geometry"]
     totals = quote["totals"]
@@ -168,7 +170,7 @@ def estimate(body: EstimateRequest):
 
 
 @app.get("/api/uf")
-def get_uf():
+def get_uf() -> dict[str, Any]:
     """Lightweight proxy for current UF value."""
     uf_value, source = _get_uf_value()
     return {
@@ -179,7 +181,7 @@ def get_uf():
 
 
 @app.post("/api/quote")
-def generate_quote(body: QuoteRequest):
+def generate_quote(body: QuoteRequest) -> StreamingResponse:
     """Generate a PDF quote and return as streaming download."""
     config = _get_config()
     live_prices = _get_live_prices()
@@ -205,6 +207,8 @@ def generate_quote(body: QuoteRequest):
         quote = build_quote(project, config, live_prices)
     except (ValueError, KeyError) as exc:
         raise HTTPException(status_code=422, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Pricing engine error: {str(exc)}")
 
     # Import exporters only when needed (heavy deps)
     from .modul_cad.exporters import export_pdf_bytes
