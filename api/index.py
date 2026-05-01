@@ -75,6 +75,7 @@ class EstimateRequest(BaseModel):
     bathrooms: int = 1
     floor_system_type: str = "standard"
     roof_system_type: str = "standard"
+    wall_height_m: float = 2.5
 
 
 class ClientInfo(BaseModel):
@@ -92,6 +93,7 @@ class QuoteRequest(BaseModel):
     bathrooms: int = 1
     floor_system_type: str = "standard"
     roof_system_type: str = "standard"
+    wall_height_m: float = 2.5
     project_name: str = "Mi Modul"
     location: str = "Santiago, RM"
     client: ClientInfo = ClientInfo()
@@ -116,6 +118,7 @@ def estimate(body: EstimateRequest):
         "bathrooms": body.bathrooms,
         "floor_system_type": body.floor_system_type,
         "roof_system_type": body.roof_system_type,
+        "wall_height_m": body.wall_height_m,
     }
 
     try:
@@ -195,6 +198,7 @@ def generate_quote(body: QuoteRequest):
         "bathrooms": body.bathrooms,
         "floor_system_type": body.floor_system_type,
         "roof_system_type": body.roof_system_type,
+        "wall_height_m": body.wall_height_m,
     }
 
     try:

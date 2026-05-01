@@ -39,7 +39,7 @@ def compute_geometry(project: dict[str, Any], config: dict[str, Any]) -> Geometr
     defaults = config["defaults"]
     grid = parse_grid(project["grid"])
     module_size = defaults["module_size_m"]
-    wall_height = defaults["wall_height_m"]
+    wall_height = project.get("wall_height_m", defaults["wall_height_m"])
     module_area = module_size * module_size
 
     module_count = sum(1 for row in grid for occupied in row if occupied)
@@ -290,7 +290,7 @@ def build_quote(
         },
         "assumptions": [
             f"Module size: {config['defaults']['module_size_m']}m x {config['defaults']['module_size_m']}m",
-            f"Wall height: {config['defaults']['wall_height_m']}m",
+            f"Wall height: {project.get('wall_height_m', config['defaults']['wall_height_m'])}m",
             "Interior partitioning estimated from occupied modules and declared bedroom/bathroom count.",
             "Kitchen and bathroom packages are treated as fixed configurable bundles.",
             "Steel profile prices come from live Sodimac pages when available, otherwise fallback snapshot values are used.",

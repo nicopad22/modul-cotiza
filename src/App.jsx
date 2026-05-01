@@ -41,6 +41,7 @@ function App() {
         bathroomType: 'standard',
         bedrooms: 2,
         bathrooms: 1,
+        moduleHeight: 2.5,
     });
 
     // ── Estimate from API ─────────────────────────────────────────────
@@ -72,6 +73,7 @@ function App() {
                         bathrooms: selections.bathrooms,
                         floor_system_type: 'standard',
                         roof_system_type: 'standard',
+                        wall_height_m: selections.moduleHeight,
                     }),
                 });
                 if (res.ok) {
@@ -94,7 +96,7 @@ function App() {
                     <>
                         <Canvas shadows camera={{ position: [3, 3, 3], fov: 50 }}>
                             <color attach="background" args={["#1a1a1a"]} />
-                            <Experience grid={grid} environment={environment} />
+                            <Experience grid={grid} environment={environment} moduleHeight={selections.moduleHeight} />
                         </Canvas>
                         <Loader />
                     </>

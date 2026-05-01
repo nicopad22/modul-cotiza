@@ -7,7 +7,7 @@ const MODULE_SIZE = 1.0;
 
 const COLORS = ['#6366f1', '#8b5cf6', '#a78bfa', '#818cf8', '#c4b5fd'];
 
-const MovingBox = ({ position, startPos, color }) => {
+const MovingBox = ({ position, startPos, color, heightRatio }) => {
     const meshRef = useRef();
     const [initialPos] = useState(startPos || position);
 
@@ -21,13 +21,13 @@ const MovingBox = ({ position, startPos, color }) => {
 
     return (
         <mesh ref={meshRef} position={initialPos}>
-            <boxGeometry args={[MODULE_SIZE, MODULE_SIZE, MODULE_SIZE]} />
+            <boxGeometry args={[MODULE_SIZE, MODULE_SIZE * heightRatio, MODULE_SIZE]} />
             <meshStandardMaterial color={color} />
         </mesh>
     );
 };
 
-export const Scene = ({ grid }) => {
+export const Scene = ({ grid, moduleHeight = 2.5 }) => {
     // Collect all filled cells from the grid
     const modules = useMemo(() => {
         if (!grid) return [];
@@ -60,16 +60,18 @@ export const Scene = ({ grid }) => {
             {modules.map(({ row, col }, i) => {
                 // Offset each module so the centroid sits at the world origin (0, 0, 0)
                 const x = (col - center.x) * MODULE_SIZE;
-                const y = 0;
+                const y = (MODULE_SIZE * (moduleHeight / 3.3)) / 2 - 0.5; // adjust Y to keep base at y=0, or let it grow from center? Let's just adjust height ratio
                 const z = (row - center.z) * MODULE_SIZE;
 
                 const color = COLORS[i % COLORS.length];
+                const heightRatio = moduleHeight / 3.3;
 
                 return (
                     <MovingBox
                         key={`${row}-${col}`}
                         position={[x, y, z]}
                         color={color}
+                        heightRatio={heightRatio}
                     />
                 );
             })}
