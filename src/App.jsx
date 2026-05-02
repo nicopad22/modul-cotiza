@@ -3,7 +3,10 @@ import { useState, useEffect, useCallback } from "react";
 import { Experience } from "./components/Experience";
 import Sidebar from "./components/Sidebar";
 import GridEditor from "./components/GridEditor";
+import SummaryCard from "./components/ui/SummaryCard";
 import { Loader } from "@react-three/drei";
+import { useIsMobile } from "./hooks/useIsMobile";
+import { T } from "./theme";
 
 const GRID_ROWS = 5;
 const GRID_COLS = 5;
@@ -28,6 +31,7 @@ function App() {
     const [viewMode, setViewMode] = useState('3d');
     const [environment, setEnvironment] = useState('norte');
     const [grid, setGrid] = useState(createInitialGrid);
+    const isMobile = useIsMobile();
 
     // Tracks one cell in the master structure. When that cell is erased,
     // GridEditor transfers it to another master cell before the erase commits.
@@ -89,25 +93,206 @@ function App() {
         return () => clearTimeout(timer);
     }, [grid, selections, quantity]);
 
+    const totalSqm = estimate?.geometry?.gross_area_m2 ?? (quantity * 10.89);
+    const totalUF = estimate?.totals?.final_total_uf;
+    const pricePerM2UF = estimate?.totals?.price_per_m2_uf;
+    const ufSource = estimate?.totals?.uf_source ?? 'pendiente';
+    const clpTotal = estimate?.totals?.final_total_clp;
+
+    // ── Shared summary card instance ──────────────────────────────────
+    const summaryCardEl = (
+        <SummaryCard
+            placedCount={quantity}
+            totalSqm={totalSqm}
+            totalUF={totalUF}
+            pricePerM2UF={pricePerM2UF}
+            ufSource={ufSource}
+            clpTotal={clpTotal}
+            estimateLoading={estimateLoading}
+            estimate={estimate}
+        />
+    );
+
+    // ── Scene content (3D or 2D grid editor) ──────────────────────────
+    const sceneContent = viewMode === '3d' ? (
+        <>
+            <Canvas shadows camera={{ position: [3, 3, 3], fov: 50 }}>
+                <color attach="background" args={["#1a1a1a"]} />
+                <Experience grid={grid} environment={environment} moduleHeight={selections.moduleHeight} />
+            </Canvas>
+            <Loader />
+        </>
+    ) : (
+        <GridEditor
+            grid={grid}
+            setGrid={setGrid}
+            masterAnchor={masterAnchor}
+            setMasterAnchor={setMasterAnchor}
+        />
+    );
+
+    // ── Vista toggle overlay (top-right of scene) ────────────────────
+    const vistaToggle = (
+        <div style={{
+            position: 'absolute',
+            top: '14px',
+            right: '14px',
+            zIndex: 10,
+            display: 'flex',
+            background: 'rgba(10,18,20,0.82)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            borderRadius: '10px',
+            border: `1px solid rgba(0, 218, 243, 0.18)`,
+            padding: '3px',
+            gap: '3px',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+        }}>
+            {[{ id: '3d', label: '🧊 3D' }, { id: '2d', label: '🗺 Planta' }].map(({ id, label }) => {
+                const active = viewMode === id;
+                return (
+                    <button
+                        key={id}
+                        onClick={() => setViewMode(id)}
+                        style={{
+                            padding: '5px 12px',
+                            borderRadius: '7px',
+                            border: 'none',
+                            cursor: 'pointer',
+                            background: active ? 'rgba(0, 218, 243, 0.18)' : 'transparent',
+                            color: active ? '#00daf3' : 'rgba(255,255,255,0.55)',
+                            fontFamily: T.fontHead,
+                            fontSize: '0.82rem',
+                            fontWeight: active ? 700 : 500,
+                            letterSpacing: '0.01em',
+                            transition: 'all 0.15s ease',
+                            boxShadow: active ? '0 0 10px rgba(0, 218, 243, 0.2)' : 'none',
+                            whiteSpace: 'nowrap',
+                        }}
+                    >
+                        {label}
+                    </button>
+                );
+            })}
+        </div>
+    );
+
+    // ═══════════════════════════════════════════════════════════════════
+    //  MOBILE LAYOUT — vertical stack
+    // ═══════════════════════════════════════════════════════════════════
+    if (isMobile) {
+        return (
+            <div style={{
+                width: '100%',
+                height: '100dvh',
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden',
+                background: T.bg,
+            }}>
+                {/* ── Top bar: logo + title + summary ── */}
+                <div style={{
+                    flexShrink: 0,
+                    padding: '14px 16px',
+                    borderBottom: `1px solid ${T.outlineVariant}`,
+                    background: T.bg,
+                }}>
+                    {/* Logo row */}
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        marginBottom: '12px',
+                    }}>
+                        <img
+                            src="/logo-modul-hd-negro.png"
+                            alt="Modul Logo"
+                            style={{
+                                width: '32px',
+                                height: '32px',
+                                objectFit: 'contain',
+                                filter: 'brightness(0) invert(1)',
+                                opacity: 0.9,
+                            }}
+                        />
+                        <div>
+                            <h1 style={{
+                                margin: 0,
+                                fontFamily: T.fontHead,
+                                fontSize: '1.15rem',
+                                fontWeight: 700,
+                                color: T.onSurface,
+                                letterSpacing: '-0.01em',
+                                lineHeight: 1.1,
+                            }}>Mi Modul</h1>
+                            <div style={{
+                                fontFamily: T.fontBody,
+                                fontSize: '0.75rem',
+                                color: T.onSurfaceVariant,
+                                marginTop: '2px',
+                            }}>Configurador</div>
+                        </div>
+                    </div>
+                    {/* Summary inline */}
+                    {summaryCardEl}
+                </div>
+
+                {/* ── Scene view ── */}
+                <div style={{
+                    height: '40vh',
+                    flexShrink: 0,
+                    position: 'relative',
+                    borderBottom: `1px solid ${T.outlineVariant}`,
+                }}>
+                    {sceneContent}
+                    {vistaToggle}
+                </div>
+
+                {/* ── Scrollable sidebar controls ── */}
+                <div style={{
+                    flex: 1,
+                    overflowY: 'auto',
+                    minHeight: 0,
+                }}>
+                    <Sidebar
+                        quantity={quantity}
+                        viewMode={viewMode}
+                        setViewMode={setViewMode}
+                        environment={environment}
+                        setEnvironment={setEnvironment}
+                        selections={selections}
+                        setSelections={setSelections}
+                        estimate={estimate}
+                        estimateLoading={estimateLoading}
+                        hideHeader
+                        isMobile
+                    />
+                </div>
+            </div>
+        );
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    //  DESKTOP LAYOUT — horizontal split (unchanged)
+    // ═══════════════════════════════════════════════════════════════════
     return (
         <div className="w-full h-screen flex flex-row overflow-hidden bg-neutral-900">
             <div className="flex-1 h-full relative">
-                {viewMode === '3d' ? (
-                    <>
-                        <Canvas shadows camera={{ position: [3, 3, 3], fov: 50 }}>
-                            <color attach="background" args={["#1a1a1a"]} />
-                            <Experience grid={grid} environment={environment} moduleHeight={selections.moduleHeight} />
-                        </Canvas>
-                        <Loader />
-                    </>
-                ) : (
-                    <GridEditor
-                        grid={grid}
-                        setGrid={setGrid}
-                        masterAnchor={masterAnchor}
-                        setMasterAnchor={setMasterAnchor}
-                    />
-                )}
+                {sceneContent}
+
+                {/* ── Vista toggle overlay — top-right of scene ── */}
+                {vistaToggle}
+
+                {/* ── Summary overlay — bottom-right of scene ── */}
+                <div style={{
+                    position: 'absolute',
+                    bottom: '20px',
+                    right: '20px',
+                    zIndex: 10,
+                    pointerEvents: 'none',
+                }}>
+                    {summaryCardEl}
+                </div>
             </div>
             <Sidebar
                 quantity={quantity}

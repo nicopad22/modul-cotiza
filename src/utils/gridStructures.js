@@ -57,7 +57,7 @@ export function analyzeGrid(grid, masterAnchor) {
         : -1;
     if (masterIdx === -1) masterIdx = 0; // fallback: first component or empty
 
-    const masterCells = masterIdx >= 0 ? components[masterIdx] : new Set();
+    const masterCells = masterIdx >= 0 && masterIdx < components.length ? components[masterIdx] : new Set();
     const disconnected = components.filter((_, i) => i !== masterIdx);
 
     const cellStructure = new Map();
