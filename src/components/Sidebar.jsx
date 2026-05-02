@@ -7,6 +7,7 @@ import { ToggleBtn } from './ui/ToggleBtn';
 import { SegmentedSelector } from './ui/SegmentedSelector';
 import { Stepper } from './ui/Stepper';
 import { Slider } from './ui/Slider';
+import AppHeader from './AppHeader';
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 const Sidebar = ({
@@ -17,6 +18,10 @@ const Sidebar = ({
     estimate, estimateLoading,
     hideHeader = false,
     isMobile = false,
+    grid = [],
+    gridToStrings = (g) => g,
+    quoteLoading = false,
+    onDownloadPdf = null,
 }) => {
     const placedCount = quantity;
     const maxBedrooms = Math.max(1, placedCount - 1);
@@ -32,9 +37,8 @@ const Sidebar = ({
                 width: '100%',
                 height: '100%',
             } : {
-                width: '22%',
+                width: '30%',
                 minWidth: '340px',
-                maxWidth: '400px',
                 height: '100%',
                 borderRight: `1px solid ${T.outlineVariant}`,
                 overflowY: 'auto',
@@ -52,38 +56,13 @@ const Sidebar = ({
             scrollbarColor: `${T.outlineVariant} transparent`,
         }}>
 
-            {/* ── Logo + title ─────────────────────────────── */}
+            {/* ── Logo + title + PDF button ─────────────────── */}
             {!hideHeader && (
-                <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <img
-                        src="/logo-modul-hd-negro.png"
-                        alt="Modul Logo"
-                        style={{
-                            width: '40px',
-                            height: '40px',
-                            objectFit: 'contain',
-                            filter: 'brightness(0) invert(1)',
-                            opacity: 0.9,
-                        }}
-                    />
-                    <div>
-                        <h1 style={{
-                            margin: 0,
-                            fontFamily: T.fontHead,
-                            fontSize: '1.35rem',
-                            fontWeight: 700,
-                            color: T.onSurface,
-                            letterSpacing: '-0.01em',
-                            lineHeight: 1.1,
-                        }}>Mi Modul</h1>
-                        <div style={{
-                            fontFamily: T.fontBody,
-                            fontSize: '0.85rem',
-                            color: T.onSurfaceVariant,
-                            marginTop: '3px',
-                        }}>Configurador</div>
-                    </div>
-                </div>
+                <AppHeader
+                    quoteLoading={quoteLoading}
+                    quantity={quantity}
+                    onDownloadPdf={onDownloadPdf}
+                />
             )}
 
 

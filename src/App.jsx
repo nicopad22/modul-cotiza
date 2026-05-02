@@ -4,6 +4,7 @@ import { Experience } from "./components/Experience";
 import Sidebar from "./components/Sidebar";
 import GridEditor from "./components/GridEditor";
 import SummaryCard from "./components/ui/SummaryCard";
+import AppHeader from "./components/AppHeader";
 import { Loader } from "@react-three/drei";
 import { useIsMobile } from "./hooks/useIsMobile";
 import { T } from "./theme";
@@ -51,8 +52,47 @@ function App() {
     // ── Estimate from API ─────────────────────────────────────────────
     const [estimate, setEstimate] = useState(null);
     const [estimateLoading, setEstimateLoading] = useState(false);
+    const [quoteLoading, setQuoteLoading] = useState(false);
 
     const quantity = grid.flat().filter(Boolean).length;
+
+    /** Build the shared API payload from current state. */
+    const buildPayload = useCallback(() => ({
+        grid: gridToStrings(grid),
+        wall_panel_type: selections.wallPanelType,
+        kitchen_type: selections.kitchenType,
+        bathroom_type: selections.bathroomType,
+        bedrooms: selections.bedrooms,
+        bathrooms: selections.bathrooms,
+        floor_system_type: 'standard',
+        roof_system_type: 'standard',
+        wall_height_m: selections.moduleHeight,
+    }), [grid, selections]);
+
+    /** Download a PDF quote from the API. */
+    const handleDownloadPdf = useCallback(async () => {
+        if (quoteLoading || quantity === 0) return;
+        setQuoteLoading(true);
+        try {
+            const res = await fetch('/api/quote', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(buildPayload()),
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'cotizacion-modul.pdf';
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error('Quote API error:', err.message);
+        } finally {
+            setQuoteLoading(false);
+        }
+    }, [quoteLoading, quantity, buildPayload]);
 
     // Debounced API call whenever grid or selections change
     useEffect(() => {
@@ -68,17 +108,7 @@ function App() {
                 const res = await fetch('/api/estimate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        grid: gridToStrings(grid),
-                        wall_panel_type: selections.wallPanelType,
-                        kitchen_type: selections.kitchenType,
-                        bathroom_type: selections.bathroomType,
-                        bedrooms: selections.bedrooms,
-                        bathrooms: selections.bathrooms,
-                        floor_system_type: 'standard',
-                        roof_system_type: 'standard',
-                        wall_height_m: selections.moduleHeight,
-                    }),
+                    body: JSON.stringify(buildPayload()),
                 });
                 if (res.ok) {
                     setEstimate(await res.json());
@@ -91,7 +121,7 @@ function App() {
         }, 300);
 
         return () => clearTimeout(timer);
-    }, [grid, selections, quantity]);
+    }, [grid, selections, quantity, buildPayload]);
 
     const totalSqm = estimate?.geometry?.gross_area_m2 ?? (quantity * 10.89);
     const totalUF = estimate?.totals?.final_total_uf;
@@ -198,48 +228,17 @@ function App() {
                     background: T.bg,
                 }}>
                     {/* Logo row */}
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        marginBottom: '12px',
-                    }}>
-                        <img
-                            src="/logo-modul-hd-negro.png"
-                            alt="Modul Logo"
-                            style={{
-                                width: '32px',
-                                height: '32px',
-                                objectFit: 'contain',
-                                filter: 'brightness(0) invert(1)',
-                                opacity: 0.9,
-                            }}
-                        />
-                        <div>
-                            <h1 style={{
-                                margin: 0,
-                                fontFamily: T.fontHead,
-                                fontSize: '1.15rem',
-                                fontWeight: 700,
-                                color: T.onSurface,
-                                letterSpacing: '-0.01em',
-                                lineHeight: 1.1,
-                            }}>Mi Modul</h1>
-                            <div style={{
-                                fontFamily: T.fontBody,
-                                fontSize: '0.75rem',
-                                color: T.onSurfaceVariant,
-                                marginTop: '2px',
-                            }}>Configurador</div>
-                        </div>
-                    </div>
-                    {/* Summary inline */}
-                    {summaryCardEl}
+                    <AppHeader
+                        quoteLoading={quoteLoading}
+                        quantity={quantity}
+                        onDownloadPdf={handleDownloadPdf}
+                        compact
+                    />
                 </div>
 
                 {/* ── Scene view ── */}
                 <div style={{
-                    height: '40vh',
+                    height: '45vh',
                     flexShrink: 0,
                     position: 'relative',
                     borderBottom: `1px solid ${T.outlineVariant}`,
@@ -253,7 +252,9 @@ function App() {
                     flex: 1,
                     overflowY: 'auto',
                     minHeight: 0,
+                    marginTop: "15px"
                 }}>
+                    {summaryCardEl}
                     <Sidebar
                         quantity={quantity}
                         viewMode={viewMode}
@@ -304,6 +305,10 @@ function App() {
                 setSelections={setSelections}
                 estimate={estimate}
                 estimateLoading={estimateLoading}
+                grid={grid}
+                gridToStrings={gridToStrings}
+                quoteLoading={quoteLoading}
+                onDownloadPdf={handleDownloadPdf}
             />
         </div>
     );
