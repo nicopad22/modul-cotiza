@@ -168,23 +168,43 @@ function App() {
         />
     ) : null;
 
-    // ── Scene content (3D or 2D grid editor) ──────────────────────────
-    const sceneContent = viewMode === '3d' ? (
+    // ── Scene content (persistently mounted 3D Canvas & 2D GridEditor) ──
+    const is3D = viewMode === '3d';
+    const sceneContent = (
         <>
-            <Canvas shadows camera={{ position: [14, 10, 14], fov: 50 }}>
-                <color attach="background" args={["#1a1a1a"]} />
-                <Experience house={house} environment={environment} />
-            </Canvas>
-            <Loader />
+            <div style={{
+                position: 'absolute',
+                inset: 0,
+                width: '100%',
+                height: '100%',
+                visibility: is3D ? 'visible' : 'hidden',
+                pointerEvents: is3D ? 'auto' : 'none',
+                zIndex: is3D ? 1 : 0,
+            }}>
+                <Canvas frameloop={is3D ? 'always' : 'never'} shadows camera={{ position: [14, 10, 14], fov: 50 }}>
+                    <color attach="background" args={["#1a1a1a"]} />
+                    <Experience house={house} environment={environment} />
+                </Canvas>
+                <Loader />
+            </div>
+            <div style={{
+                position: 'absolute',
+                inset: 0,
+                width: '100%',
+                height: '100%',
+                visibility: !is3D ? 'visible' : 'hidden',
+                pointerEvents: !is3D ? 'auto' : 'none',
+                zIndex: !is3D ? 1 : 0,
+            }}>
+                <GridEditor
+                    grid={grid}
+                    setGrid={setGrid}
+                    masterAnchor={masterAnchor}
+                    setMasterAnchor={setMasterAnchor}
+                    orientation={orientation}
+                />
+            </div>
         </>
-    ) : (
-        <GridEditor
-            grid={grid}
-            setGrid={setGrid}
-            masterAnchor={masterAnchor}
-            setMasterAnchor={setMasterAnchor}
-            orientation={orientation}
-        />
     );
 
     // ── Vista toggle overlay (top-right of scene) ────────────────────

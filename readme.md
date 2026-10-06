@@ -17,7 +17,8 @@ modul-cotiza/
 
 ## Features
 
-- [x] Visualización 3D de la casa modular (React Three Fiber)
+- [x] Visualización 3D de la casa modular (React Three Fiber) con fondos HDR optimizados y precarga
+- [x] Conmutación instantánea (0ms) entre vista 3D y vista de planta 2D sin recargas de contexto WebGL
 - [x] Generador procedural de arquitectura 3D (terrazas en tubo, ventanales, puerta y baños)
 - [x] Selector de orientación de fachada principal (Norte, Sur, Este, Oeste)
 - [x] Editor 2D de planta (grid con validación de conectividad e ignorado de bloques huérfanos)

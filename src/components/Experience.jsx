@@ -1,6 +1,10 @@
-import { OrbitControls, Environment } from "@react-three/drei";
+import { OrbitControls, Environment, useEnvironment } from "@react-three/drei";
 import { Scene } from "./Scene";
 import { useState } from "react";
+
+// Preload environments immediately for fast switching and zero-delay initialization
+useEnvironment.preload({ files: "/norte_de_chile.hdr" });
+useEnvironment.preload({ files: "/sur_de_chile.hdr" });
 
 // World units = meters (module = 3.3 m)
 export const Experience = ({ house, environment }) => {
@@ -17,7 +21,7 @@ export const Experience = ({ house, environment }) => {
                 target={[0, 1.5, 0]}
             />
             <Scene house={house} />
-            <Environment files={environment === 'norte' ? "/norte_de_chile.exr" : "/sur_de_chile.exr"} background />
+            <Environment files={environment === 'norte' ? "/norte_de_chile.hdr" : "/sur_de_chile.hdr"} background />
         </>
     );
 };

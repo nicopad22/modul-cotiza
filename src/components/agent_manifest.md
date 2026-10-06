@@ -2,7 +2,7 @@
 This folder contains the React UI components for the Modul CAD front-end.
 
 ## Files
-- `Experience.jsx`: Renders the 3D environment using `@react-three/drei`. Handles `OrbitControls` in metric coordinates and background environment toggling.
+- `Experience.jsx`: Renders the 3D environment using `@react-three/drei`. Handles `OrbitControls` in metric coordinates, loads optimized Radiance HDR (`.hdr`) environment maps, and preloads environments for zero-latency switching.
 - `GridEditor.jsx`: A 2D interactive canvas for drawing the floor plan.
   - Allows users to place and erase modules on a virtual grid.
   - Highlights invalid or disconnected structures by leveraging utilities from `gridStructures.js`.

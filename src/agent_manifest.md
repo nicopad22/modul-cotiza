@@ -7,7 +7,7 @@ This folder contains the root React front-end code for the Modul CAD configurato
   - Generates the procedural 3D house model in real time via `src/procgen` on any shape, structure, or material change.
   - Excludes disconnected modules from calculations and API calls.
   - Orchestrates a debounced API call to `POST /api/estimate` whenever the grid or configuration changes.
-  - Renders the split-screen layout containing either the 3D Canvas (`Experience`) or the 2D `GridEditor`, alongside the `Sidebar`.
+  - Renders the split-screen layout with persistently mounted 3D Canvas (`Experience`) and 2D `GridEditor`, toggling visibility via CSS and pausing the WebGL render loop (`frameloop="never"`) in 2D mode for 0ms view switching.
   - Displays `SummaryCard` only in 3D view mode.
 
 - `main.jsx`: React entrypoint that mounts `App` to the DOM.
