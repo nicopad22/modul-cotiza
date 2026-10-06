@@ -1,80 +1,63 @@
-import { useRef, useState, useMemo } from 'react';
-import { useFrame } from '@react-three/fiber';
-import { Vector3 } from 'three';
+import { useMemo, useEffect } from 'react';
+import { MeshStandardMaterial, DoubleSide } from 'three';
+import { ContactShadows } from '@react-three/drei';
+import cfg from '../config/house_gen.json';
 
-// Module size in world units (1 unit = 1 module width/depth)
-const MODULE_SIZE = 1.0;
-
-const COLORS = ['#6366f1', '#8b5cf6', '#a78bfa', '#818cf8', '#c4b5fd'];
-
-const MovingBox = ({ position, startPos, color, heightRatio }) => {
-    const meshRef = useRef();
-    const [initialPos] = useState(startPos || position);
-
-    useFrame((state, delta) => {
-        if (meshRef.current) {
-            const target = new Vector3(...position);
-            const speed = 5;
-            meshRef.current.position.lerp(target, 1 - Math.exp(-speed * delta));
-        }
-    });
-
-    return (
-        <mesh ref={meshRef} position={initialPos}>
-            <boxGeometry args={[MODULE_SIZE, MODULE_SIZE * heightRatio, MODULE_SIZE]} />
-            <meshStandardMaterial color={color} />
-        </mesh>
-    );
-};
-
-export const Scene = ({ grid, moduleHeight = 2.5 }) => {
-    // Collect all filled cells from the grid
-    const modules = useMemo(() => {
-        if (!grid) return [];
-        const cells = [];
-        grid.forEach((rowArr, row) => {
-            rowArr.forEach((filled, col) => {
-                if (filled) cells.push({ row, col });
-            });
-        });
-        return cells;
-    }, [grid]);
-
-    // Compute the centroid of all placed modules so we can center them at the origin
-    const center = useMemo(() => {
-        if (modules.length === 0) return { x: 0, z: 0 };
-        const sumX = modules.reduce((s, m) => s + m.col, 0);
-        const sumZ = modules.reduce((s, m) => s + m.row, 0);
+/** Material instances built from house_gen.json colors (no hardcoded geometry). */
+function useHouseMaterials(colors) {
+    const mats = useMemo(() => {
+        const std = (color, extra = {}) => new MeshStandardMaterial({ color, roughness: 0.85, ...extra });
         return {
-            x: sumX / modules.length,
-            z: sumZ / modules.length,
+            exterior: std(colors.exterior),
+            roof_top: std(colors.roof_top),
+            frame: std(colors.frame, { roughness: 0.5 }),
+            glass: std(colors.glass, {
+                transparent: true,
+                opacity: colors.glass_opacity,
+                roughness: 0.05,
+                metalness: 0.1,
+                depthWrite: false,
+                side: DoubleSide,
+            }),
+            interior_wall: std(colors.interior_wall),
+            interior_floor: std(colors.interior_floor, { roughness: 0.7 }),
+            door: std(colors.door),
+            plinth: std(colors.plinth),
         };
-    }, [modules]);
+    }, [colors]);
+    useEffect(() => () => Object.values(mats).forEach(m => m.dispose()), [mats]);
+    return mats;
+}
+
+/**
+ * Renders the procedurally generated house (see src/procgen).
+ * `house` = output of generateHouse(); only maps primitives → meshes.
+ */
+export const Scene = ({ house }) => {
+    const mats = useHouseMaterials(cfg.colors);
+    const resolve = (m) => (Array.isArray(m) ? m.map(k => mats[k]) : mats[m]);
+    const center = house?.bounds?.center ?? [0, 0, 0];
 
     return (
         <group>
-            <ambientLight intensity={1} />
-            <directionalLight position={[10, 16, 5]} intensity={2.5} />
-            <directionalLight position={[-10, -13, -5]} intensity={1} />
+            <ambientLight intensity={0.6} />
+            <directionalLight position={[15, 25, 10]} intensity={2.2} />
+            <directionalLight position={[-12, 10, -8]} intensity={0.6} />
 
-            {modules.map(({ row, col }, i) => {
-                // Offset each module so the centroid sits at the world origin (0, 0, 0)
-                const x = (col - center.x) * MODULE_SIZE;
-                const y = (MODULE_SIZE * (moduleHeight / 3.3)) / 2 - 0.5; // adjust Y to keep base at y=0, or let it grow from center? Let's just adjust height ratio
-                const z = (row - center.z) * MODULE_SIZE;
+            <group position={[-center[0], 0, -center[2]]}>
+                {house?.primitives.map(p => (
+                    <mesh
+                        key={p.id}
+                        position={p.pos}
+                        material={resolve(p.mat)}
+                        renderOrder={p.mat === 'glass' ? 1 : 0}
+                    >
+                        <boxGeometry args={p.size} />
+                    </mesh>
+                ))}
+            </group>
 
-                const color = COLORS[i % COLORS.length];
-                const heightRatio = moduleHeight / 3.3;
-
-                return (
-                    <MovingBox
-                        key={`${row}-${col}`}
-                        position={[x, y, z]}
-                        color={color}
-                        heightRatio={heightRatio}
-                    />
-                );
-            })}
+            <ContactShadows position={[0, 0.001, 0]} opacity={0.55} scale={40} blur={2.2} far={8} />
         </group>
     );
 };

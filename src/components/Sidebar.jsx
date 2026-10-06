@@ -14,6 +14,8 @@ const Sidebar = ({
     quantity,
     viewMode, setViewMode,
     environment, setEnvironment,
+    orientation = 'N', setOrientation,
+    maxBathrooms: propMaxBathrooms,
     selections, setSelections,
     estimate, estimateLoading,
     hideHeader = false,
@@ -25,7 +27,7 @@ const Sidebar = ({
 }) => {
     const placedCount = quantity;
     const maxBedrooms = Math.max(1, placedCount - 1);
-    const maxBathrooms = Math.max(1, Math.floor(placedCount / 2));
+    const maxBathrooms = propMaxBathrooms ?? Math.max(1, Math.floor(placedCount / 2));
 
     const updateSelection = (key, value) => {
         setSelections(prev => ({ ...prev, [key]: value }));
@@ -86,6 +88,23 @@ const Sidebar = ({
                             🌲 Sur
                         </ToggleBtn>
                     </div>
+                </div>
+            )}
+
+            {/* ── Orientation (Main Front) ──────────────────── */}
+            {setOrientation && (
+                <div style={{ marginBottom: '12px' }}>
+                    <SectionLabel>Orientación (Frente)</SectionLabel>
+                    <SegmentedSelector
+                        options={[
+                            { value: 'N', label: '↑ Norte' },
+                            { value: 'E', label: '→ Este' },
+                            { value: 'S', label: '↓ Sur' },
+                            { value: 'W', label: '← Oeste' },
+                        ]}
+                        value={orientation}
+                        onChange={setOrientation}
+                    />
                 </div>
             )}
 

@@ -18,11 +18,13 @@ modul-cotiza/
 ## Features
 
 - [x] Visualización 3D de la casa modular (React Three Fiber)
-- [x] Editor 2D de planta (grid con validación de conectividad)
+- [x] Generador procedural de arquitectura 3D (terrazas en tubo, ventanales, puerta y baños)
+- [x] Selector de orientación de fachada principal (Norte, Sur, Este, Oeste)
+- [x] Editor 2D de planta (grid con validación de conectividad e ignorado de bloques huérfanos)
 - [x] Estimación de precio en tiempo real vía API
 - [x] Selector de panel de muro (SIP MgO 122mm / 152mm)
 - [x] Selector de calidad de cocina y baño (basic / standard / premium)
-- [x] Contador de dormitorios y baños
+- [x] Contador de dormitorios y baños con límite dinámico según distribución
 - [x] Precios vivos de perfiles de acero desde Sodimac
 - [x] Valor UF del día desde SII
 - [ ] Descarga de cotización PDF desde el navegador

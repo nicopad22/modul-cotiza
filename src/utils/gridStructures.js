@@ -87,3 +87,12 @@ export function analyzeGrid(grid, masterAnchor) {
 
     return { masterCells, disconnected, cellStructure, validCells };
 }
+
+/**
+ * Returns a copy of the grid containing only the master structure.
+ * Disconnected structures are ignored for rendering, m² and pricing.
+ */
+export function masterGrid(grid, masterAnchor) {
+    const { masterCells } = analyzeGrid(grid, masterAnchor);
+    return grid.map((row, r) => row.map((_, c) => masterCells.has(`${r},${c}`)));
+}

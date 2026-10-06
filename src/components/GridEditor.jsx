@@ -16,7 +16,7 @@ const CSS = `
   to   { transform: translateY(0);    opacity: 1; }
 }`;
 
-export default function GridEditor({ grid, setGrid, masterAnchor, setMasterAnchor }) {
+export default function GridEditor({ grid, setGrid, masterAnchor, setMasterAnchor, orientation = 'N' }) {
     const dragAction = useRef(null);
     const [hoveredCell, setHoveredCell] = useState(null);
 
@@ -104,7 +104,7 @@ export default function GridEditor({ grid, setGrid, masterAnchor, setMasterAncho
             <style>{CSS}</style>
 
             {/* Legend — left side */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'flex-start', marginRight: '18px', flexShrink: 0 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'flex-start', marginRight: '36px', flexShrink: 0 }}>
                 <LegendItem color="rgba(99,102,241,0.5)" border="rgba(99,102,241,0.3)" label="Módulo seleccionado" vertical />
                 <LegendItem color="rgba(239,68,68,0.6)" border="rgba(239,68,68,0.4)" label="Módulo separado" vertical />
 
@@ -128,35 +128,144 @@ export default function GridEditor({ grid, setGrid, masterAnchor, setMasterAncho
             {/* Center column: header + grid + footer */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
 
-                {/* Header */}
-                {/* <div className="mb-5 text-center">
-                    <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#a5b4fc', letterSpacing: '0.05em', margin: 0, textTransform: 'uppercase' }}>
-                        Planta 2D
-                    </h2>
-                    <p style={{ color: '#64748b', fontSize: '0.8rem', margin: '4px 0 0' }}>
-                        Haz clic o arrastra para colocar módulos
-                    </p>
-                </div> */}
+                {/* Grid Wrapper */}
+                <div style={{ position: 'relative' }}>
 
-                {/* Grid */}
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: `repeat(${cols}, 1fr)`,
-                    gridTemplateRows: `repeat(${rows}, 1fr)`,
-                    gap: '3px',
-                    padding: '12px',
-                    background: 'rgba(255,255,255,0.03)',
-                    borderRadius: '16px',
-                    border: disconnected.length > 0
-                        ? '1px solid rgba(239,68,68,0.35)'
-                        : '1px solid rgba(99,102,241,0.2)',
-                    boxShadow: disconnected.length > 0
-                        ? '0 0 40px rgba(239,68,68,0.07), inset 0 0 40px rgba(0,0,0,0.3)'
-                        : '0 0 40px rgba(99,102,241,0.08), inset 0 0 40px rgba(0,0,0,0.3)',
-                    transition: 'border-color 0.3s, box-shadow 0.3s',
-                    width: 'min(55vw, 55vh, 500px)',
-                    height: 'min(55vw, 55vh, 500px)',
-                }}>
+                    {/* FRENTE Indicator on the face matching orientation */}
+                    {orientation === 'N' && (
+                        <div style={{
+                            position: 'absolute',
+                            top: '-32px',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '4px 16px',
+                            background: 'rgba(0, 218, 243, 0.16)',
+                            border: '1px solid #00daf3',
+                            borderRadius: '999px',
+                            color: '#00daf3',
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            letterSpacing: '0.08em',
+                            textTransform: 'uppercase',
+                            boxShadow: '0 0 16px rgba(0, 218, 243, 0.35)',
+                            pointerEvents: 'none',
+                            whiteSpace: 'nowrap',
+                            zIndex: 10,
+                        }}>
+                            <span>▲</span><span>FRENTE</span><span>▲</span>
+                        </div>
+                    )}
+                    {orientation === 'S' && (
+                        <div style={{
+                            position: 'absolute',
+                            bottom: '-32px',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '4px 16px',
+                            background: 'rgba(0, 218, 243, 0.16)',
+                            border: '1px solid #00daf3',
+                            borderRadius: '999px',
+                            color: '#00daf3',
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            letterSpacing: '0.08em',
+                            textTransform: 'uppercase',
+                            boxShadow: '0 0 16px rgba(0, 218, 243, 0.35)',
+                            pointerEvents: 'none',
+                            whiteSpace: 'nowrap',
+                            zIndex: 10,
+                        }}>
+                            <span>▼</span><span>FRENTE</span><span>▼</span>
+                        </div>
+                    )}
+                    {orientation === 'E' && (
+                        <div style={{
+                            position: 'absolute',
+                            right: '-36px',
+                            top: '50%',
+                            transform: 'translateY(-50%) translateX(100%)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '14px 6px',
+                            background: 'rgba(0, 218, 243, 0.16)',
+                            border: '1px solid #00daf3',
+                            borderRadius: '999px',
+                            color: '#00daf3',
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            letterSpacing: '0.08em',
+                            textTransform: 'uppercase',
+                            boxShadow: '0 0 16px rgba(0, 218, 243, 0.35)',
+                            pointerEvents: 'none',
+                            whiteSpace: 'nowrap',
+                            zIndex: 10,
+                        }}>
+                            <span>►</span>
+                            <span style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>FRENTE</span>
+                            <span>►</span>
+                        </div>
+                    )}
+                    {orientation === 'W' && (
+                        <div style={{
+                            position: 'absolute',
+                            left: '-36px',
+                            top: '50%',
+                            transform: 'translateY(-50%) translateX(-100%)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '14px 6px',
+                            background: 'rgba(0, 218, 243, 0.16)',
+                            border: '1px solid #00daf3',
+                            borderRadius: '999px',
+                            color: '#00daf3',
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            letterSpacing: '0.08em',
+                            textTransform: 'uppercase',
+                            boxShadow: '0 0 16px rgba(0, 218, 243, 0.35)',
+                            pointerEvents: 'none',
+                            whiteSpace: 'nowrap',
+                            zIndex: 10,
+                        }}>
+                            <span>◄</span>
+                            <span style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>FRENTE</span>
+                            <span>◄</span>
+                        </div>
+                    )}
+
+                    {/* Grid */}
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: `repeat(${cols}, 1fr)`,
+                        gridTemplateRows: `repeat(${rows}, 1fr)`,
+                        gap: '3px',
+                        padding: '12px',
+                        background: 'rgba(255,255,255,0.03)',
+                        borderRadius: '16px',
+                        border: disconnected.length > 0
+                            ? '1px solid rgba(239,68,68,0.35)'
+                            : '1px solid rgba(99,102,241,0.2)',
+                        borderTop: orientation === 'N' ? '2px solid #00daf3' : undefined,
+                        borderBottom: orientation === 'S' ? '2px solid #00daf3' : undefined,
+                        borderRight: orientation === 'E' ? '2px solid #00daf3' : undefined,
+                        borderLeft: orientation === 'W' ? '2px solid #00daf3' : undefined,
+                        boxShadow: disconnected.length > 0
+                            ? '0 0 40px rgba(239,68,68,0.07), inset 0 0 40px rgba(0,0,0,0.3)'
+                            : `${orientation === 'N' ? '0 -6px 20px rgba(0, 218, 243, 0.25)' : orientation === 'S' ? '0 6px 20px rgba(0, 218, 243, 0.25)' : orientation === 'E' ? '6px 0 20px rgba(0, 218, 243, 0.25)' : '-6px 0 20px rgba(0, 218, 243, 0.25)'}, 0 0 40px rgba(99,102,241,0.08), inset 0 0 40px rgba(0,0,0,0.3)`,
+                        transition: 'border-color 0.3s, box-shadow 0.3s',
+                        width: 'min(55vw, 55vh, 500px)',
+                        height: 'min(55vw, 55vh, 500px)',
+                    }}>
                     {grid.map((rowArr, row) =>
                         rowArr.map((filled, col) => {
                             const key = `${row},${col}`;
@@ -243,8 +352,8 @@ export default function GridEditor({ grid, setGrid, masterAnchor, setMasterAncho
                             );
                         })
                     )}
-                </div>
-
+                </div>{/* end grid */}
+                </div>{/* end grid wrapper */}
 
             </div>{/* end center column */}
 

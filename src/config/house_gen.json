@@ -1,0 +1,57 @@
+{
+    "module": {
+        "size": 3.3,
+        "plinth_height": 0.3,
+        "plinth_inset": 0.15,
+        "floor_thickness": 0.2,
+        "roof_thickness": 0.25
+    },
+    "walls": {
+        "default_thickness": 0.122,
+        "thickness_by_panel": {
+            "mgo_sip_122": 0.122,
+            "mgo_sip_152": 0.152
+        }
+    },
+    "terrace": {
+        "depth": 1.0,
+        "wall_thickness": 0.15,
+        "floor_thickness": 0.2,
+        "roof_thickness": 0.25
+    },
+    "ventanal": {
+        "frame_width": 0.06,
+        "glass_thickness": 0.012
+    },
+    "small_window": {
+        "width": 0.6,
+        "height": 0.5,
+        "sill_height": 1.6,
+        "offset": 0.5,
+        "offset_with_door": 0.15,
+        "frame_width": 0.04,
+        "min_top_gap": 0.1
+    },
+    "door": {
+        "width": 0.9,
+        "height": 2.05,
+        "offset": 0.5,
+        "frame_width": 0.05,
+        "leaf_thickness": 0.045,
+        "min_top_gap": 0.1
+    },
+    "bathrooms": {
+        "placement_attempts": 64
+    },
+    "colors": {
+        "exterior": "#7a5230",
+        "roof_top": "#7a5230",
+        "frame": "#f4f4f2",
+        "glass": "#bfe6ff",
+        "glass_opacity": 0.2,
+        "interior_wall": "#f4f4f2",
+        "interior_floor": "#c9a27a",
+        "door": "#5a3a1f",
+        "plinth": "#555555"
+    }
+}

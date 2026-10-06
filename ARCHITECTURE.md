@@ -4,11 +4,15 @@
 Modul-cotiza is a web-based, real-time configurator for modular homes. It allows users to place modules on a 2D grid, visualizes them in 3D, and computes a dynamic cost estimate by querying a backend API.
 
 ## Frontend (React / Vite)
-- **State Management:** `App.jsx` acts as the single source of truth for the configurator's state (grid layout, module height, environment, panel type, etc.).
+- **State Management:** `App.jsx` acts as the single source of truth for the configurator's state (grid layout, module height, environment, panel type, front orientation, etc.).
+- **Procedural Engine (`src/procgen/`):**
+  - Generates the 3D model automatically using parametric rules and adjacency edge matrices (`t`/`v`/`c`/`p`/`w`).
+  - Reads dimensional and material configurations from `src/config/house_gen.json`.
+  - Enforces continuous "tube" terraces along the main front run, ventanales, entrance door opposite front, and non-adjacent bathroom windows.
 - **Components:** 
   - `GridEditor.jsx`: A 2D canvas where the user toggles the presence of modules on a grid. Uses `gridStructures.js` to ensure the modules form a valid, continuous structure.
-  - `Sidebar.jsx`: The control panel. It renders options, inputs, and the real-time `SummaryCard` using data fetched from the API.
-  - `Scene.jsx` & `Experience.jsx`: React Three Fiber components that translate the 2D grid into a 3D visual representation.
+  - `Sidebar.jsx`: The control panel. It renders options (including front orientation), inputs, and the real-time `SummaryCard` using data fetched from the API.
+  - `Scene.jsx` & `Experience.jsx`: React Three Fiber components that render the procedural 3D box primitives with real-world scales and architectural materials.
 
 ## Backend (FastAPI / Vercel Serverless)
 - **`api/index.py`**: The entry point. Exposes endpoints `/api/estimate`, `/api/quote`, and `/api/uf`.

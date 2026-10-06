@@ -1,5 +1,5 @@
 import { Canvas } from "@react-three/fiber";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Experience } from "./components/Experience";
 import Sidebar from "./components/Sidebar";
 import GridEditor from "./components/GridEditor";
@@ -8,6 +8,9 @@ import AppHeader from "./components/AppHeader";
 import { Loader } from "@react-three/drei";
 import { useIsMobile } from "./hooks/useIsMobile";
 import { T } from "./theme";
+import { masterGrid } from "./utils/gridStructures";
+import { generateHouse } from "./procgen";
+import houseCfg from "./config/house_gen.json";
 
 const GRID_ROWS = 5;
 const GRID_COLS = 5;
@@ -49,25 +52,47 @@ function App() {
         moduleHeight: 2.5,
     });
 
+    // Side of the planta where terraces + ventanales face: 'N' | 'E' | 'S' | 'W'
+    const [orientation, setOrientation] = useState('N');
+
     // ── Estimate from API ─────────────────────────────────────────────
     const [estimate, setEstimate] = useState(null);
     const [estimateLoading, setEstimateLoading] = useState(false);
     const [quoteLoading, setQuoteLoading] = useState(false);
 
-    const quantity = grid.flat().filter(Boolean).length;
+    // Disconnected structures are ignored for everything (render, m², price).
+    const mGrid = useMemo(() => masterGrid(grid, masterAnchor), [grid, masterAnchor]);
+    const quantity = mGrid.flat().filter(Boolean).length;
+
+    // ── Procedural house: regenerated on any shape / structure / material change ──
+    const house = useMemo(() => generateHouse({
+        grid: mGrid,
+        orientation,
+        bathrooms: selections.bathrooms,
+        moduleHeight: selections.moduleHeight,
+        wallPanelType: selections.wallPanelType,
+    }, houseCfg), [mGrid, orientation, selections.bathrooms, selections.moduleHeight, selections.wallPanelType]);
+
+    // Keep bathroom count within what the layout can hold
+    const maxBathrooms = Math.max(1, house.maxBathrooms);
+    useEffect(() => {
+        if (selections.bathrooms > maxBathrooms) {
+            setSelections(prev => ({ ...prev, bathrooms: maxBathrooms }));
+        }
+    }, [maxBathrooms, selections.bathrooms]);
 
     /** Build the shared API payload from current state. */
     const buildPayload = useCallback(() => ({
-        grid: gridToStrings(grid),
+        grid: gridToStrings(mGrid),
         wall_panel_type: selections.wallPanelType,
         kitchen_type: selections.kitchenType,
         bathroom_type: selections.bathroomType,
         bedrooms: selections.bedrooms,
-        bathrooms: selections.bathrooms,
+        bathrooms: Math.min(selections.bathrooms, maxBathrooms),
         floor_system_type: 'standard',
         roof_system_type: 'standard',
         wall_height_m: selections.moduleHeight,
-    }), [grid, selections]);
+    }), [mGrid, selections, maxBathrooms]);
 
     /** Download a PDF quote from the API. */
     const handleDownloadPdf = useCallback(async () => {
@@ -121,7 +146,7 @@ function App() {
         }, 300);
 
         return () => clearTimeout(timer);
-    }, [grid, selections, quantity, buildPayload]);
+    }, [mGrid, selections, quantity, buildPayload]);
 
     const totalSqm = estimate?.geometry?.gross_area_m2 ?? (quantity * 10.89);
     const totalUF = estimate?.totals?.final_total_uf;
@@ -129,8 +154,8 @@ function App() {
     const ufSource = estimate?.totals?.uf_source ?? 'pendiente';
     const clpTotal = estimate?.totals?.final_total_clp;
 
-    // ── Shared summary card instance ──────────────────────────────────
-    const summaryCardEl = (
+    // ── Shared summary card instance (only in 3D view) ────────────────
+    const summaryCardEl = viewMode === '3d' ? (
         <SummaryCard
             placedCount={quantity}
             totalSqm={totalSqm}
@@ -141,14 +166,14 @@ function App() {
             estimateLoading={estimateLoading}
             estimate={estimate}
         />
-    );
+    ) : null;
 
     // ── Scene content (3D or 2D grid editor) ──────────────────────────
     const sceneContent = viewMode === '3d' ? (
         <>
-            <Canvas shadows camera={{ position: [3, 3, 3], fov: 50 }}>
+            <Canvas shadows camera={{ position: [14, 10, 14], fov: 50 }}>
                 <color attach="background" args={["#1a1a1a"]} />
-                <Experience grid={grid} environment={environment} moduleHeight={selections.moduleHeight} />
+                <Experience house={house} environment={environment} />
             </Canvas>
             <Loader />
         </>
@@ -158,6 +183,7 @@ function App() {
             setGrid={setGrid}
             masterAnchor={masterAnchor}
             setMasterAnchor={setMasterAnchor}
+            orientation={orientation}
         />
     );
 
@@ -254,13 +280,16 @@ function App() {
                     minHeight: 0,
                     marginTop: "15px"
                 }}>
-                    {summaryCardEl}
+                    {viewMode === '3d' && summaryCardEl}
                     <Sidebar
                         quantity={quantity}
                         viewMode={viewMode}
                         setViewMode={setViewMode}
                         environment={environment}
                         setEnvironment={setEnvironment}
+                        orientation={orientation}
+                        setOrientation={setOrientation}
+                        maxBathrooms={maxBathrooms}
                         selections={selections}
                         setSelections={setSelections}
                         estimate={estimate}
@@ -285,15 +314,17 @@ function App() {
                 {vistaToggle}
 
                 {/* ── Summary overlay — bottom-right of scene ── */}
-                <div style={{
-                    position: 'absolute',
-                    bottom: '20px',
-                    right: '20px',
-                    zIndex: 10,
-                    pointerEvents: 'none',
-                }}>
-                    {summaryCardEl}
-                </div>
+                {viewMode === '3d' && (
+                    <div style={{
+                        position: 'absolute',
+                        bottom: '20px',
+                        right: '20px',
+                        zIndex: 10,
+                        pointerEvents: 'none',
+                    }}>
+                        {summaryCardEl}
+                    </div>
+                )}
             </div>
             <Sidebar
                 quantity={quantity}
@@ -301,6 +332,9 @@ function App() {
                 setViewMode={setViewMode}
                 environment={environment}
                 setEnvironment={setEnvironment}
+                orientation={orientation}
+                setOrientation={setOrientation}
+                maxBathrooms={maxBathrooms}
                 selections={selections}
                 setSelections={setSelections}
                 estimate={estimate}
